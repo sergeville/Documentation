@@ -1,0 +1,43 @@
+$ 1 0.000005 10.20027730826997 50 5 43 5e-11
+// --- Power Source (12V) and Load (12 Ohms) ---
+v 176 80 176 0 0 0 12 0 0 0 0.5
+r 400 80 400 240 0 12 // R_LOAD
+r 176 80 400 80 0 50m // R_SHUNT (R1)
+w 176 0 400 0 0
+w 400 240 400 320 0
+
+// --- VOLTAGE DIVIDER ADDED (Node 176 240 is V_Sense) ---
+r 176 160 176 240 0 47000 // R_DIV_1 (47k)
+r 176 240 176 320 0 10000 // R_DIV_2 (10k)
+w 176 80 176 160 0 // Connects V_DIV to V_Source
+
+// --- Op-Amp Components (Gain G = 10k/1k = 10) ---
+r 400 320 544 320 0 1000 // R_INV_IN
+r 544 320 544 400 0 10000 // R_FEEDBACK
+r 176 400 400 400 0 1000 // R_NONINV_IN
+r 544 400 544 480 0 10000 // R_GROUND_SET
+
+// --- Op-Amp (a) ---
+a 544 160 688 160 0 1000000 -10 10 0 0 0 0 1
+
+// --- Op-Amp Wiring ---
+w 544 160 400 80 0 // (+) Input connected to top of R_SHUNT
+w 544 240 400 240 0 // (-) Input connected to bottom of R_SHUNT
+
+// --- Power Rail and Ground Rail Connections ---
+w 400 400 400 480 0 // Ground rail
+w 176 400 400 400 0
+w 400 480 544 480 0
+w 176 0 176 480 0
+w 400 0 400 480 0
+w 176 320 400 320 0
+
+// --- Final Output to Scope and Ground ---
+w 688 160 688 480 0 // Op-Amp Output connected to ground rail
+o 11 64 0 4099 2 0.05 0 2 0 3 // Scope: Op-Amp Output (Current Signal)
+
+// --- DIGITAL READOUTS (The "Screen"!) ---
+// Node 176 240 is the Voltage Divider output
+x 80 280 0 1 "V_Sense (2.1V is 12V)" 176 240
+// Node 688 160 is the Op-Amp output
+x 600 80 0 1 "I_Sense (0.5V is 1A)" 688 160

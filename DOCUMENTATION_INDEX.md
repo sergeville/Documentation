@@ -1,10 +1,10 @@
 # Documentation Index
 ## Central Registry of Essential Markdown Files in ~/Documents/
 
-**Last Updated**: 2026-02-22 (Root cleanup — moved stray files/folders to correct locations)
+**Last Updated**: 2026-03-11
 **Maintainer**: Serge Villeneuve
 **Purpose**: Single source of truth for all critical documentation
-**Total Files Indexed**: 153 essential files (out of 2,559 user-created files)
+**Total Files Indexed**: 155 essential files (out of 2,559 user-created files)
 
 ---
 
@@ -132,13 +132,21 @@ Previously at `~/Documents/` root, now properly placed:
 **What**: Agent coordination, task delegation, conflict resolution
 **Status**: Active
 
+#### IDEA_DATA_ARCHITECTURE.md
+**Location**: `~/Documents/Documentation/System/IDEA_DATA_ARCHITECTURE.md`
+**Why**: Documents the single-source-of-truth architecture for idea data
+**When**: Created 2026-03-07
+**Who**: Claude (Archon assignee)
+**What**: capture-api as master store, Archon as read-only mirror, API endpoint reference for agents, sync triggers
+**Status**: Active
+
 #### MD_FILES_MANIFEST.md
-**Location**: `~/Documents/Documentation/System/MD_FILES_MANIFEST.md`
-**Why**: Complete catalog of all MD files
+**Location**: `~/Documents/Archive/MD_FILES_MANIFEST_2026-02-18.md`
+**Why**: Raw point-in-time catalog of all MD files
 **When**: Created 2026-02-18
 **Who**: Claude (Archon assignee)
-**What**: 15,222 total files, 2,559 user-created, comprehensive categories
-**Status**: Active
+**What**: 15,222 total files, 2,559 user-created — archived, not maintained
+**Status**: Archived
 
 #### MD_FILES_ORGANIZATIONAL_PLAN.md
 **Location**: `~/Documents/Documentation/System/MD_FILES_ORGANIZATIONAL_PLAN.md`
@@ -277,6 +285,28 @@ Previously at `~/Documents/` root, now properly placed:
 
 ---
 
+## Skills & Analysis
+
+### SKILLS_MANIFEST.md
+**Location**: `~/Documents/Documentation/SKILLS_MANIFEST.md`
+**Why**: Comprehensive index of all SKILL.md files across the workspace (~80 skills, 10+ projects)
+**When**: Created 2026-03-11
+**Who**: Claude (data/memory/logic agent analysis session)
+**What**: Organized catalog of active, archived, and template skills by project; includes review flags, plugin marketplace entries, and instructions for adding new skills
+**Status**: Active
+**Version**: 1.0
+
+### SKILL-ANALYSIS-medical-memory.md
+**Location**: `~/Documents/Documentation/SKILL-ANALYSIS-medical-memory.md`
+**Why**: Security and efficiency audit of the Medical-memory SKILL.md (PHI/HIPAA-relevant findings)
+**When**: Created 2026-03-11
+**Who**: Claude (data/memory/logic agent analysis session)
+**What**: 25 issues found (9 security · 8 efficiency · 8 logic); P0–P3 prioritized fix list; covers PHI storage, encryption, session ID safety, atomic writes, search indexing
+**Status**: Active — actionable findings pending implementation
+**Version**: 1.0
+
+---
+
 ## Maintenance Instructions
 
 ### Update This Index When:
@@ -299,7 +329,7 @@ Previously at `~/Documents/` root, now properly placed:
 
 ## Related Documentation
 
-- `~/Documents/Documentation/System/MD_FILES_MANIFEST.md` - Complete file catalog
+- `~/Documents/Archive/MD_FILES_MANIFEST_2026-02-18.md` - Raw file catalog (archived Feb 2026 snapshot)
 - `~/Documents/Documentation/System/MD_FILES_ORGANIZATIONAL_PLAN.md` - Organization strategy
 - `~/Documents/CLAUDE.md` - Workspace AI instructions (root, kept for CLI)
 - `~/Documents/Documentation/DOCUMENTATION_INDEX.md` - This file (moved from root 2026-02-22)

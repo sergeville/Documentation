@@ -1,10 +1,10 @@
 # Documentation Index
 ## Central Registry of Essential Markdown Files in ~/Documents/
 
-**Last Updated**: 2026-03-11
+**Last Updated**: 2026-03-13
 **Maintainer**: Serge Villeneuve
 **Purpose**: Single source of truth for all critical documentation
-**Total Files Indexed**: 155 essential files (out of 2,559 user-created files)
+**Total Files Indexed**: 156 essential files (out of 2,559 user-created files)
 
 ---
 
@@ -75,6 +75,14 @@ Previously at `~/Documents/` root, now properly placed:
 ## System Documentation
 
 ### Documentation/System/
+
+#### SCRIPTS_REGISTRY.md
+**Location**: `~/Documents/Documentation/System/SCRIPTS_REGISTRY.md`
+**Why**: Central reference for all scripts and utilities in `~/Documents/Scripts/`
+**When**: Created 2026-03-13
+**Who**: Serge Villeneuve
+**What**: Catalogs all scripts by category — media tools, Archon, session logging, system maintenance, GitHub, scaffolding. Includes usage examples.
+**Status**: Active
 
 #### SYSTEM_PROMPT.md
 **Location**: `~/Documents/Documentation/System/SYSTEM_PROMPT.md`

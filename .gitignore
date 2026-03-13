@@ -2,3 +2,7 @@ System/
 .DS_Store
 *.HEIC
 *.heic
+
+# Media folders not tracked in git
+Personal/media/project-assets/
+Personal/media/ai-generated/

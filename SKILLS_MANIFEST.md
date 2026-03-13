@@ -17,7 +17,7 @@
 ### Alfred (`~/Documents/Projects/Alfred/.claude/skills/`)
 
 | Skill Name | Description | Status |
-|-----------|-------------|--------|
+| ----------- | ----------- | ------ |
 | `alfred-agent` | Alfred HA agent orchestration | ✅ |
 | `alfred-archon` | Archon context management for Alfred | ✅ |
 | `alfred-db` | Alfred database operations | ✅ |
@@ -67,7 +67,7 @@
 ### HVAC_ideas (`~/Documents/Projects/HVAC_ideas/`)
 
 | Skill Name | Path | Description | Status |
-|-----------|------|-------------|--------|
+| ----------- | ---- | ----------- | ------ |
 | `hvac-agent` | `.claude/skills/` | HVAC AI assistant orchestration | ✅ |
 | `hvac-diagnostic` | `.claude/skills/` | HVAC fault diagnosis workflow | ✅ |
 | `hvac-mindmap` | `.claude/skills/` | Generate HVAC mind maps | ✅ |
@@ -85,7 +85,7 @@
 ### medical-diagnostic (`~/Documents/Projects/medical-diagnostic/`)
 
 | Skill Name | Path | Description | Status |
-|-----------|------|-------------|--------|
+| ----------- | ---- | ----------- | ------ |
 | `Medical-memory` | `skills/` | Conversation persistence for medical sessions via MCP | ⚠️ See Analysis |
 
 > Analysis report: `~/Documents/Documentation/SKILL-ANALYSIS-medical-memory.md`
@@ -95,7 +95,7 @@
 ### idea-capture-web (`~/Documents/Projects/idea-capture-web/`)
 
 | Skill Name | Path | Description | Status |
-|-----------|------|-------------|--------|
+| ----------- | ---- | ----------- | ------ |
 | `web-markdown-renderer` | `skills/` | React + Tailwind document-style Markdown renderer | ✅ |
 
 ---
@@ -103,7 +103,7 @@
 ### Projects/.ideas (Unified Idea Capture)
 
 | Skill Name | Path | Description | Status |
-|-----------|------|-------------|--------|
+| ----------- | ---- | ----------- | ------ |
 | `idea-capture` | `~/Documents/Projects/.ideas/` | Unified idea capture across all AI assistants via IdeaManager JSON DB | ✅ |
 
 ---
@@ -113,7 +113,7 @@
 *General Claude Code meta-skills for agent behavior and workflow*
 
 | Skill Name | Description | Status |
-|-----------|-------------|--------|
+| ----------- | ----------- | ------ |
 | `brainstorming` | Structured brainstorming sessions | ✅ |
 | `dispatching-parallel-agents` | Launch and coordinate parallel sub-agents | ✅ |
 | `executing-plans` | Execute written plans step-by-step | ✅ |
@@ -136,7 +136,7 @@
 *Installed globally, available in all sessions*
 
 | Plugin | Skill | Description | Status |
-|--------|-------|-------------|--------|
+| ------ | ----- | ----------- | ------ |
 | `claude-code-setup` | `claude-automation-recommender` | Analyze codebase → recommend hooks, skills, MCP servers, subagents | ✅ |
 | `claude-md-management` | `claude-md-improver` | Audit and improve CLAUDE.md files across a repo | ✅ |
 | `playground` | `playground` | Experimental skill sandbox | ✅ |
@@ -149,13 +149,13 @@
 ### Archive/ExperimentalProjects
 
 | Skill Name | Project | Description | Status |
-|-----------|---------|-------------|--------|
+| ----------- | ------- | ----------- | ------ |
 | `full-stack-creator-and-doc-custodian` | `full-stack-creator-and-doc-custodian` | Multi-role: Document Custodian + Programmer + UX Designer | 📦 |
 
 ### Archive/alfred-refactored-20260126
 
 | Skill Name | Description | Status |
-|-----------|-------------|--------|
+| ----------- | ----------- | ------ |
 | `alfred-agent` | Alfred agent (pre-refactor) | 📦 |
 | `alfred-deploy` | Alfred deploy (pre-refactor) | 📦 |
 | `alfred-dev` | Alfred dev (pre-refactor) | 📦 |
@@ -165,14 +165,14 @@
 ### Archive/MyExperiments
 
 | Skill Name | Description | Status |
-|-----------|-------------|--------|
+| ----------- | ----------- | ------ |
 | `alfred` | Alfred agent (early experiment) | 📦 |
 | `idea-capture` (template) | AI agent framework template | 🔧 Template |
 
 ### mkproject Template
 
 | Skill Name | Path | Description | Status |
-|-----------|------|-------------|--------|
+| ----------- | ---- | ----------- | ------ |
 | `idea-capture` | `Projects/mkproject/templates/ai-agent/skills/` | Template for new agent projects | 🔧 Template |
 
 ---
@@ -180,7 +180,7 @@
 ## Skills Needing Review
 
 | Skill | Issue | Priority |
-|-------|-------|----------|
+| ----- | ----- | -------- |
 | `Medical-memory` | Security (PHI/HIPAA), efficiency, logic | HIGH — see analysis report |
 | `hvac-memory` | Likely same pattern as Medical-memory — same MCP memory template | MEDIUM |
 | `full-stack-creator-and-doc-custodian` | Archived — assess if still used anywhere | LOW |

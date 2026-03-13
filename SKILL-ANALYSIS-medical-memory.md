@@ -19,7 +19,7 @@ The skill is functional for low-volume, single-user, non-regulated use but **mus
 ### CRITICAL
 
 | # | Issue | Location | Risk |
-|---|-------|----------|------|
+| - | ----- | -------- | ---- |
 | S1 | **PHI stored in `.tmp/`** — temp dir is world-readable on macOS, subject to OS cleanup, accessible by other processes | `Storage Structure` section | Data leakage, loss |
 | S2 | **No encryption at rest** — all conversations stored as plaintext JSON including patient_id, symptoms, diagnoses | `file_path` field | PHI exposure |
 | S3 | **No access control** — no authentication or authorization check before save/load/delete operations | entire skill | Unauthorized access |
@@ -28,7 +28,7 @@ The skill is functional for low-volume, single-user, non-regulated use but **mus
 ### HIGH
 
 | # | Issue | Location | Risk |
-|---|-------|----------|------|
+| - | ----- | -------- | ---- |
 | S5 | **Predictable, enumerable session_id** — `conversation_20260130_123456` format leaks timestamp and is trivially enumerable | `session_id` field | Session enumeration attack |
 | S6 | **Unvalidated metadata dict** — arbitrary key/value pairs accepted with no sanitization; if metadata is later queried or indexed, path-traversal or injection possible | `metadata` parameter | Injection, unexpected behavior |
 | S7 | **keyword search unsanitized** — `keywords=["appendicitis"]` fed directly to matcher; no regex escaping shown | `search_conversations` | Regex injection if implemented as regex |
@@ -37,7 +37,7 @@ The skill is functional for low-volume, single-user, non-regulated use but **mus
 ### MEDIUM
 
 | # | Issue | Location | Risk |
-|---|-------|----------|------|
+| - | ----- | -------- | ---- |
 | S9 | **`patient_id` embedded in plain metadata** — PII should be hashed or referenced by opaque token, not stored in clear in searchable fields | `metadata.patient_id` | PII exposure in logs/indexes |
 
 ---
@@ -45,7 +45,7 @@ The skill is functional for low-volume, single-user, non-regulated use but **mus
 ## 2. Efficiency Issues
 
 | # | Issue | Impact | Fix |
-|---|-------|--------|-----|
+| - | ----- | ------ | --- |
 | E1 | **File-per-conversation flat storage** — search requires opening every file; does not scale past ~1000 sessions | O(n) reads on every search | Use SQLite index or append-only log with separate index file |
 | E2 | **`search_conversations` is O(n) full scan** — no inverted index, no pre-built keyword→session lookup | High latency at scale | Build a `keywords_index.json` on save; query the index instead |
 | E3 | **`list_conversations(limit=50)` hardcoded default** — no offset/cursor parameter for pagination | UI will miss sessions > 50 | Add `offset` or `after_id` cursor parameter |
@@ -60,7 +60,7 @@ The skill is functional for low-volume, single-user, non-regulated use but **mus
 ## 3. Logic Issues
 
 | # | Issue | Location | Risk |
-|---|-------|----------|------|
+| - | ----- | -------- | ---- |
 | L1 | **No session_id uniqueness guarantee** — two saves within the same second produce identical IDs; second write silently overwrites first | `session_id` generation | Silent data loss |
 | L2 | **No atomic write** — if process dies mid-write, a partial/corrupt JSON file is left on disk | `save_conversation` | Corrupt state; crash on next load |
 | L3 | **No schema validation on `metadata`** — required fields like `patient_id`, `outcome` are not enforced | `metadata` parameter | Inconsistent records; failed searches |
@@ -76,7 +76,7 @@ The skill is functional for low-volume, single-user, non-regulated use but **mus
 
 ### P0 — Do immediately (blockers for any real use)
 
-```
+```text
 1. Move storage from .tmp/ to a stable, protected path:
    ~/Documents/Projects/medical-diagnostic/.data/conversations/
    (add to .gitignore)
@@ -93,7 +93,7 @@ The skill is functional for low-volume, single-user, non-regulated use but **mus
 
 ### P1 — High priority (security posture)
 
-```
+```text
 5. Add filesystem-level access restriction:
    chmod 700 on the conversations directory
 
@@ -109,7 +109,7 @@ The skill is functional for low-volume, single-user, non-regulated use but **mus
 
 ### P2 — Efficiency (performance & usability)
 
-```
+```text
 9.  Build keywords_index.json updated on every save/delete
 10. Add offset parameter to list_conversations
 11. Truncate first_message preview at 80 chars (word boundary)
@@ -119,7 +119,7 @@ The skill is functional for low-volume, single-user, non-regulated use but **mus
 
 ### P3 — Logic cleanup
 
-```
+```text
 13. Define SESSION_TYPE constant, not inline string
 14. Add TTL field to metadata (e.g., retain_until: ISO date)
     with periodic cleanup script
@@ -132,7 +132,7 @@ The skill is functional for low-volume, single-user, non-regulated use but **mus
 ## 5. Priority Matrix
 
 | Priority | Count | Issues |
-|----------|-------|--------|
+| -------- | ----- | ------ |
 | P0 (Blocker) | 4 | S1, S2, L1, L2 |
 | P1 (High) | 5 | S3, S4, S5, S8, S9 |
 | P2 (Medium) | 7 | E1–E8 (minus E8→P1), S6, S7 |

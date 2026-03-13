@@ -1,0 +1,1609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Skills Mind Map</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.28.1/cytoscape.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'SF Mono', 'Fira Code', monospace; background: #0d1117; color: #e6edf3; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+#header {
+  padding: 10px 16px; background: #161b22; border-bottom: 1px solid #30363d;
+  display: flex; align-items: center; gap: 20px; flex-shrink: 0;
+}
+#header h1 { font-size: 15px; color: #58a6ff; font-weight: 600; }
+#header .subtitle { font-size: 11px; color: #484f58; }
+#search-box {
+  margin-left: auto; background: #0d1117; border: 1px solid #30363d;
+  color: #e6edf3; padding: 5px 10px; border-radius: 6px; font-size: 12px;
+  font-family: inherit; width: 200px;
+}
+#search-box::placeholder { color: #484f58; }
+
+#main { display: flex; flex: 1; overflow: hidden; position: relative; }
+#cy { flex: 1; height: 100%; cursor: grab; }
+#cy:active { cursor: grabbing; }
+
+#sidebar {
+  width: 270px; background: #161b22; border-left: 1px solid #30363d;
+  padding: 14px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;
+}
+
+.panel {
+  background: #0d1117; border: 1px solid #30363d; border-radius: 8px; padding: 12px;
+}
+.panel-title {
+  font-size: 10px; color: #484f58; text-transform: uppercase;
+  letter-spacing: 0.8px; margin-bottom: 10px; font-weight: 600;
+}
+
+/* Depth slider */
+#depth-display {
+  font-size: 22px; font-weight: 700; color: #58a6ff; text-align: center;
+  margin: 4px 0;
+}
+#depth-label { font-size: 10px; color: #484f58; text-align: center; margin-bottom: 8px; }
+input[type="range"] { width: 100%; accent-color: #58a6ff; cursor: pointer; }
+.depth-marks { display: flex; justify-content: space-between; font-size: 10px; color: #484f58; margin-top: 2px; }
+
+/* Buttons */
+.btn {
+  background: #21262d; border: 1px solid #30363d; color: #e6edf3;
+  padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 11px;
+  width: 100%; margin-top: 6px; font-family: inherit; transition: background 0.15s;
+}
+.btn:hover { background: #30363d; }
+.btn.primary { background: #1f6feb; border-color: #1f6feb; color: #fff; }
+.btn.primary:hover { background: #388bfd; }
+.btn.warn { background: #da3633; border-color: #da3633; color: #fff; }
+.btn.warn:hover { background: #f85149; }
+
+/* Node info */
+#node-name { font-size: 14px; color: #e6edf3; font-weight: 600; word-break: break-all; margin-bottom: 6px; }
+#node-badge {
+  display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px;
+  font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;
+}
+#node-desc { font-size: 12px; color: #8b949e; line-height: 1.5; }
+#node-stats { margin-top: 8px; font-size: 11px; color: #484f58; border-top: 1px solid #21262d; padding-top: 8px; }
+#node-stats span { color: #58a6ff; }
+#node-empty { font-size: 12px; color: #484f58; text-align: center; padding: 16px 0; }
+
+/* Legend */
+.legend-row { display: flex; align-items: center; gap: 8px; font-size: 11px; color: #8b949e; margin-bottom: 5px; cursor: pointer; border-radius: 4px; padding: 2px 4px; transition: background 0.15s; }
+.legend-row:hover { background: rgba(255,255,255,0.07); color: #c9d1d9; }
+.legend-row.legend-active { background: rgba(88,166,255,0.15); color: #f0f6fc; outline: 1px solid rgba(88,166,255,0.3); }
+.legend-dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; border: 2px solid rgba(255,255,255,0.15); }
+.legend-square { width: 11px; height: 11px; border-radius: 3px; flex-shrink: 0; border: 2px solid rgba(255,255,255,0.15); }
+.legend-star { width: 13px; height: 13px; flex-shrink: 0; display: inline-block; color: #c9d1d9; font-size: 12px; line-height: 1; }
+
+/* Status */
+#status {
+  padding: 5px 16px; background: #161b22; border-top: 1px solid #30363d;
+  font-size: 11px; color: #484f58; display: flex; gap: 20px; flex-shrink: 0;
+}
+.stat { display: flex; gap: 4px; }
+.stat b { color: #8b949e; }
+
+/* Highlight path breadcrumb */
+#breadcrumb { font-size: 10px; color: #484f58; word-break: break-word; line-height: 1.6; }
+#breadcrumb span { color: #58a6ff; }
+
+/* Rubber band selection overlay */
+#selection-box {
+  position: absolute; pointer-events: none; display: none; z-index: 100;
+  border: 2px dashed #58a6ff; background: rgba(88,166,255,0.1);
+}
+
+/* ─── Node file modal ─────────────────────────────────────────────────────── */
+#node-modal-overlay {
+  display: none; position: fixed; inset: 0; z-index: 9000;
+  background: rgba(0,0,0,0.65); backdrop-filter: blur(3px);
+  align-items: center; justify-content: center;
+}
+#node-modal-overlay.open { display: flex; }
+#node-modal {
+  background: #161b22; border: 1px solid #30363d; border-radius: 12px;
+  padding: 28px 32px; box-shadow: 0 20px 60px #000a;
+  position: relative; font-family: inherit; color: #e6edf3;
+  width: 80vw; max-width: 80vw; max-height: 80vh;
+  display: flex; flex-direction: column;
+}
+#node-modal-close {
+  position: absolute; top: 14px; right: 16px; background: none; border: none;
+  color: #8b949e; font-size: 20px; cursor: pointer; line-height: 1;
+}
+#node-modal-close:hover { color: #e6edf3; }
+#node-modal-type {
+  display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: .06em;
+  text-transform: uppercase; padding: 2px 8px; border-radius: 4px; margin-bottom: 10px;
+}
+#node-modal-type.root    { background:#1f3a5f; color:#58a6ff; }
+#node-modal-type.project { background:#1a3d28; color:#3fb950; }
+#node-modal-type.group   { background:#3d2e0a; color:#e6a030; }
+#node-modal-type.skill   { background:#2d1f4a; color:#bc8cff; }
+#node-modal-title { font-size: 20px; font-weight: 700; margin: 0 0 8px; }
+#node-modal-desc  { font-size: 14px; color: #8b949e; margin: 0 0 16px; line-height: 1.5; }
+#node-modal-path  {
+  font-size: 12px; font-family: 'SF Mono', monospace; color: #58a6ff;
+  background: #0d1117; border: 1px solid #21262d; border-radius: 6px;
+  padding: 8px 12px; margin-bottom: 20px; word-break: break-all;
+}
+#node-modal-path.no-path { color: #484f58; font-style: italic; }
+#node-modal-actions { display: flex; gap: 10px; }
+#node-modal-cancel {
+  background: none; border: 1px solid #30363d; color: #8b949e;
+  padding: 7px 18px; border-radius: 6px; cursor: pointer; font-size: 14px;
+}
+#node-modal-cancel:hover { border-color: #8b949e; color: #e6edf3; }
+
+/* File content pane */
+#node-modal-content {
+  display: none; max-height: 420px; overflow-y: auto; margin: 16px 0;
+  background: #0d1117; border: 1px solid #21262d; border-radius: 8px;
+  padding: 16px; font-size: 13px; line-height: 1.65; color: #e6edf3;
+}
+#node-modal-content.loading { color: #8b949e; font-style: italic; }
+#node-modal-content.error   { color: #f85149; font-style: italic; }
+#node-modal-content h1,
+#node-modal-content h2,
+#node-modal-content h3 { color: #58a6ff; margin: 14px 0 6px; font-size: 15px; }
+#node-modal-content h1 { font-size: 18px; border-bottom: 1px solid #21262d; padding-bottom: 6px; }
+#node-modal-content h2 { font-size: 15px; }
+#node-modal-content h3 { font-size: 13px; color: #79c0ff; }
+#node-modal-content code {
+  background: #161b22; border: 1px solid #30363d; border-radius: 4px;
+  padding: 1px 5px; font-family: 'SF Mono', monospace; font-size: 12px; color: #ff7b72;
+}
+#node-modal-content pre {
+  background: #161b22; border: 1px solid #30363d; border-radius: 6px;
+  padding: 12px; overflow-x: auto; margin: 10px 0;
+}
+#node-modal-content pre code { background: none; border: none; padding: 0; color: #e6edf3; }
+#node-modal-content ul, #node-modal-content ol { padding-left: 20px; margin: 6px 0; }
+#node-modal-content li { margin: 3px 0; }
+#node-modal-content strong { color: #ffa657; font-weight: 600; }
+#node-modal-content em { color: #a5d6ff; }
+#node-modal-content hr { border: none; border-top: 1px solid #21262d; margin: 14px 0; }
+#node-modal-content p { margin: 6px 0; }
+#node-modal-content::-webkit-scrollbar { width: 6px; }
+#node-modal-content::-webkit-scrollbar-track { background: transparent; }
+#node-modal-content::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
+#node-modal-content { flex: 1; min-height: 0; max-height: none; }
+</style>
+</head>
+<body>
+
+<div id="header">
+  <h1>⚡ Skills Mind Map</h1>
+  <span class="subtitle">~80 skills · 7 projects · click any node to explore</span>
+  <input type="text" id="search-box" placeholder="🔍 Search skill...">
+</div>
+
+<div id="main">
+  <div id="cy"></div>
+  <div id="selection-box"></div>
+
+  <div id="sidebar">
+
+    <div class="panel">
+      <div class="panel-title">Depth Explorer</div>
+      <div id="depth-display">1</div>
+      <div id="depth-label">parent levels to show (children always shown)</div>
+      <input type="range" id="depth-slider" min="1" max="5" value="1">
+      <div class="depth-marks"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></div>
+      <button class="btn primary" id="btn-reset">↺ Reset — Show All</button>
+      <button class="btn" id="btn-focus">⊙ Focus Mode (hide others)</button>
+      <button class="btn warn" id="btn-clear-group" style="display:none;">✕ Clear Group Selection</button>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Layout</div>
+      <button class="btn primary" id="btn-save-pos">💾 Save Positions</button>
+      <label class="btn" style="text-align:center; cursor:pointer; margin-top:6px;">📂 Import Layout File<input type="file" id="file-import" accept=".json" style="display:none;"></label>
+      <button class="btn" id="btn-reset-layout">↺ Reset to Default Layout</button>
+      <div id="save-status" style="font-size:10px; text-align:center; margin-top:6px; min-height:14px;"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Selected Node</div>
+      <div id="node-info">
+        <div id="node-empty">Click any node to inspect it</div>
+        <div id="node-detail" style="display:none">
+          <div id="node-name"></div>
+          <div id="node-badge"></div>
+          <div id="node-desc"></div>
+          <div id="node-stats"></div>
+          <div id="breadcrumb" style="margin-top:8px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Legend</div>
+      <div class="legend-row" data-filter="root"><span class="legend-star">★</span> Root</div>
+      <div class="legend-row" data-filter="project"><div class="legend-square" style="background:#58a6ff"></div> Project</div>
+      <div class="legend-row" data-filter="group"><span class="legend-star" style="color:#3fb950; font-size:16px; line-height:1">⬢</span> Group</div>
+      <div class="legend-row" data-filter="alfred"><div class="legend-dot" style="background:#a371f7"></div> Skill (Alfred/BMAD)</div>
+      <div class="legend-row" data-filter="hvac"><div class="legend-dot" style="background:#f78166"></div> Skill (HVAC)</div>
+      <div class="legend-row" data-filter="medical"><div class="legend-dot" style="background:#ffa657"></div> Skill (Medical/Ideas)</div>
+      <div class="legend-row" data-filter="superpowers"><div class="legend-dot" style="background:#79c0ff"></div> Skill (Superpowers)</div>
+      <div class="legend-row" data-filter="plugins"><div class="legend-dot" style="background:#ff7b72"></div> Skill (Plugins)</div>
+      <div class="legend-row" data-filter="review"><div class="legend-dot" style="background:#da3633; border:2px solid #da3633"></div> ⚠️ Needs Review</div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Stats</div>
+      <div id="graph-stats" style="font-size:11px; color:#8b949e; line-height:1.8;"></div>
+    </div>
+
+  </div>
+</div>
+
+<div id="status">
+  <div class="stat"><b>Nodes visible:</b> <span id="stat-visible">—</span></div>
+  <div class="stat"><b>Total skills:</b> <span id="stat-total">—</span></div>
+  <div class="stat"><b>Selected:</b> <span id="stat-selected">none</span></div>
+  <div class="stat"><b>Depth:</b> <span id="stat-depth">—</span></div>
+</div>
+
+<!-- Embedded saved positions — updated when you save and replace the file -->
+<script id="saved-positions-data" type="application/json">null</script>
+
+<div id="node-modal-overlay">
+  <div id="node-modal">
+    <button id="node-modal-close">✕</button>
+    <div id="node-modal-type"></div>
+    <div id="node-modal-title"></div>
+    <div id="node-modal-desc"></div>
+    <div id="node-modal-path"></div>
+    <div id="node-modal-content"></div>
+    <div id="node-modal-actions">
+      <button id="node-modal-cancel">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── PROJECT COLOR MAP ───────────────────────────────────────────────────────
+const PROJECT_COLORS = {
+  root:       { bg: '#c9d1d9', border: '#8b949e', text: '#0d1117' },
+  project:    { bg: '#58a6ff', border: '#1f6feb', text: '#0d1117' },
+  group:      { bg: '#3fb950', border: '#238636', text: '#0d1117' },
+  alfred:     { bg: '#a371f7', border: '#8957e5', text: '#0d1117' },
+  hvac:       { bg: '#f78166', border: '#da3633', text: '#0d1117' },
+  medical:    { bg: '#ffa657', border: '#e3b341', text: '#0d1117' },
+  'idea-web': { bg: '#ffa657', border: '#e3b341', text: '#0d1117' },
+  ideas:      { bg: '#ffa657', border: '#e3b341', text: '#0d1117' },
+  superpowers:{ bg: '#79c0ff', border: '#388bfd', text: '#0d1117' },
+  plugins:    { bg: '#ff7b72', border: '#cf222e', text: '#0d1117' },
+  review:     { bg: '#da3633', border: '#b91c1c', text: '#fff'    }
+};
+
+function nodeColor(data) {
+  if (data.type === 'root')    return PROJECT_COLORS.root;
+  if (data.type === 'project') return PROJECT_COLORS.project;
+  if (data.type === 'group')   return PROJECT_COLORS[data.project] || PROJECT_COLORS.alfred;
+  if (data.needsReview)        return PROJECT_COLORS.review;
+  return PROJECT_COLORS[data.project] || PROJECT_COLORS.alfred;
+}
+
+// ─── GRAPH DATA ──────────────────────────────────────────────────────────────
+const elements = [
+  // ROOT
+  { data: { id:'root', label:'🏠 Workspace', type:'root', desc:'Claude Code Skills — all projects' }},
+
+  // PROJECTS
+  { data: { id:'p-alfred',     label:'🤖 Alfred',           type:'project', project:'alfred',     desc:'Home Automation Agent — HA + BMAD (43 skills)' }},
+  { data: { id:'p-hvac',       label:'🌡️ HVAC_ideas',       type:'project', project:'hvac',       desc:'HVAC Diagnostic Agent (11 skills)' }},
+  { data: { id:'p-medical',    label:'🏥 medical-diagnostic',type:'project', project:'medical',    desc:'Medical Diagnostic — PHI session memory' }},
+  { data: { id:'p-idea-web',   label:'💡 idea-capture-web', type:'project', project:'idea-web',   desc:'Unified Idea Capture System' }},
+  { data: { id:'p-superpowers',label:'⚡ superpowers',      type:'project', project:'superpowers',desc:'Claude Code Meta-Skills (14 skills)' }},
+  { data: { id:'p-plugins',    label:'🔌 Plugins (Global)', type:'project', project:'plugins',    desc:'Globally installed Claude Code plugins' }},
+  { data: { id:'p-ideas',      label:'📝 Projects/.ideas',  type:'project', project:'ideas',      desc:'Blur-to-Build Idea Pipeline' }},
+
+  // ALFRED GROUPS
+  { data: { id:'g-alfred-core',  label:'Alfred Core',        type:'group', project:'alfred', desc:'Core Alfred HA agent skills' }},
+  { data: { id:'g-bmad-agents',  label:'BMAD Agents',        type:'group', project:'alfred', desc:'BMAD role-based agent skills (analyst, dev, qa…)' }},
+  { data: { id:'g-bmad-workflow', label:'BMAD Workflow',     type:'group', project:'alfred', desc:'BMAD process, story, and documentation skills' }},
+  { data: { id:'g-bmad-orch',    label:'BMAD Orchestration', type:'group', project:'alfred', desc:'Master orchestrator + brownfield management' }},
+
+  // ALFRED CORE SKILLS
+  { data: { id:'s-alfred-agent',      label:'alfred-agent',       type:'skill', project:'alfred', desc:'Alfred HA agent orchestration' }},
+  { data: { id:'s-alfred-archon',     label:'alfred-archon',      type:'skill', project:'alfred', desc:'Archon context management for Alfred' }},
+  { data: { id:'s-alfred-db',         label:'alfred-db',          type:'skill', project:'alfred', desc:'Alfred database operations' }},
+  { data: { id:'s-alfred-debug',      label:'alfred-debug',       type:'skill', project:'alfred', desc:'Alfred debug workflows' }},
+  { data: { id:'s-alfred-dev',        label:'alfred-dev',         type:'skill', project:'alfred', desc:'Alfred development tasks' }},
+  { data: { id:'s-alfred-integration',label:'alfred-integration',  type:'skill', project:'alfred', desc:'Alfred integration testing' }},
+  { data: { id:'s-alfred-release',    label:'alfred-release',     type:'skill', project:'alfred', desc:'Alfred release & deploy' }},
+  { data: { id:'s-alfred-setup',      label:'alfred-setup',       type:'skill', project:'alfred', desc:'Alfred environment setup' }},
+  { data: { id:'s-alfred-test',       label:'alfred-test',        type:'skill', project:'alfred', desc:'Alfred test runner' }},
+  { data: { id:'s-validate',          label:'validate',           type:'skill', project:'alfred', desc:'Validation gate for Alfred changes' }},
+
+  // BMAD AGENT SKILLS
+  { data: { id:'s-bmad-analyst',   label:'bmad-analyst',   type:'skill', project:'alfred', desc:'BMAD analyst agent' }},
+  { data: { id:'s-bmad-architect', label:'bmad-architect',  type:'skill', project:'alfred', desc:'BMAD architect agent' }},
+  { data: { id:'s-bmad-dev',       label:'bmad-dev',        type:'skill', project:'alfred', desc:'BMAD developer agent (Amelia)' }},
+  { data: { id:'s-bmad-pm',        label:'bmad-pm',         type:'skill', project:'alfred', desc:'BMAD product manager agent' }},
+  { data: { id:'s-bmad-po',        label:'bmad-po',         type:'skill', project:'alfred', desc:'BMAD product owner agent' }},
+  { data: { id:'s-bmad-qa',        label:'bmad-qa',         type:'skill', project:'alfred', desc:'BMAD QA agent (Quinn)' }},
+  { data: { id:'s-bmad-sm',        label:'bmad-sm',         type:'skill', project:'alfred', desc:'BMAD scrum master agent' }},
+  { data: { id:'s-bmad-ux-expert', label:'bmad-ux-expert',  type:'skill', project:'alfred', desc:'BMAD UX design agent' }},
+
+  // BMAD WORKFLOW SKILLS
+  { data: { id:'s-bmad-adv-elicitation',  label:'bmad-advanced-elicitation',     type:'skill', project:'alfred', desc:'Advanced requirements elicitation' }},
+  { data: { id:'s-bmad-apply-qa',         label:'bmad-apply-qa-fixes',            type:'skill', project:'alfred', desc:'Apply QA fix recommendations' }},
+  { data: { id:'s-bmad-correct-course',   label:'bmad-correct-course',            type:'skill', project:'alfred', desc:'Sprint course correction' }},
+  { data: { id:'s-bmad-deep-research',    label:'bmad-create-deep-research-prompt',type:'skill',project:'alfred', desc:'Generate deep research prompts' }},
+  { data: { id:'s-bmad-create-doc',       label:'bmad-create-doc',                type:'skill', project:'alfred', desc:'Create BMAD documentation' }},
+  { data: { id:'s-bmad-create-story',     label:'bmad-create-next-story',         type:'skill', project:'alfred', desc:'Create next sprint story' }},
+  { data: { id:'s-bmad-doc-project',      label:'bmad-document-project',          type:'skill', project:'alfred', desc:'Document brownfield project' }},
+  { data: { id:'s-bmad-exec-checklist',   label:'bmad-execute-checklist',         type:'skill', project:'alfred', desc:'Execute BMAD checklists' }},
+  { data: { id:'s-bmad-brainstorm',       label:'bmad-facilitate-brainstorming',  type:'skill', project:'alfred', desc:'Facilitate team brainstorming' }},
+  { data: { id:'s-bmad-gen-frontend',     label:'bmad-gen-ai-frontend-prompt',    type:'skill', project:'alfred', desc:'Generate AI frontend prompts' }},
+  { data: { id:'s-bmad-index-docs',       label:'bmad-index-docs',                type:'skill', project:'alfred', desc:'Index documentation folder' }},
+  { data: { id:'s-bmad-kb-mode',          label:'bmad-kb-mode-interaction',       type:'skill', project:'alfred', desc:'Knowledge base mode interactions' }},
+  { data: { id:'s-bmad-nfr-assess',       label:'bmad-nfr-assess',                type:'skill', project:'alfred', desc:'Non-functional requirements assessment' }},
+  { data: { id:'s-bmad-qa-gate',          label:'bmad-qa-gate',                   type:'skill', project:'alfred', desc:'QA gate validation' }},
+  { data: { id:'s-bmad-review-story',     label:'bmad-review-story',              type:'skill', project:'alfred', desc:'Review story implementation' }},
+  { data: { id:'s-bmad-risk-profile',     label:'bmad-risk-profile',              type:'skill', project:'alfred', desc:'Project risk profiling' }},
+  { data: { id:'s-bmad-shard-doc',        label:'bmad-shard-doc',                 type:'skill', project:'alfred', desc:'Split large markdown docs into sections' }},
+  { data: { id:'s-bmad-test-design',      label:'bmad-test-design',               type:'skill', project:'alfred', desc:'Test design and architecture' }},
+  { data: { id:'s-bmad-trace-reqs',       label:'bmad-trace-requirements',        type:'skill', project:'alfred', desc:'Requirements traceability' }},
+  { data: { id:'s-bmad-validate-story',   label:'bmad-validate-next-story',       type:'skill', project:'alfred', desc:'Validate next story readiness' }},
+
+  // BMAD ORCHESTRATION SKILLS
+  { data: { id:'s-bmad-master',     label:'bmad-bmad-master',          type:'skill', project:'alfred', desc:'BMAD master orchestrator' }},
+  { data: { id:'s-bmad-orch',       label:'bmad-bmad-orchestrator',    type:'skill', project:'alfred', desc:'BMAD multi-agent orchestration' }},
+  { data: { id:'s-bmad-bf-epic',    label:'bmad-brownfield-create-epic',type:'skill',project:'alfred', desc:'Create epic for brownfield project' }},
+  { data: { id:'s-bmad-bf-story',   label:'bmad-brownfield-story',     type:'skill', project:'alfred', desc:'Create brownfield story' }},
+  { data: { id:'s-bmad-risk-adv',   label:'bmad-advanced-elicitation', type:'skill', project:'alfred', desc:'Advanced requirements elicitation (orchestration)' }},
+
+  // HVAC GROUPS
+  { data: { id:'g-hvac-core', label:'HVAC Core',       type:'group', project:'hvac', desc:'HVAC agent, diagnostics, MCP integration' }},
+  { data: { id:'g-hvac-ops',  label:'HVAC Operations', type:'group', project:'hvac', desc:'Mind maps, reminders, reports, scheduling' }},
+
+  // HVAC SKILLS
+  { data: { id:'s-hvac-agent',      label:'hvac-agent',      type:'skill', project:'hvac', desc:'HVAC AI assistant orchestration' }},
+  { data: { id:'s-hvac-diagnostic', label:'hvac-diagnostic', type:'skill', project:'hvac', desc:'HVAC fault diagnosis workflow' }},
+  { data: { id:'s-hvac-mcp',        label:'hvac-mcp',        type:'skill', project:'hvac', desc:'HVAC MCP server integration' }},
+  { data: { id:'s-hvac-mindmap',    label:'hvac-mindmap',    type:'skill', project:'hvac', desc:'Generate HVAC mind maps' }},
+  { data: { id:'s-hvac-reminder',   label:'hvac-reminder',   type:'skill', project:'hvac', desc:'HVAC maintenance reminders' }},
+  { data: { id:'s-hvac-report',     label:'hvac-report',     type:'skill', project:'hvac', desc:'HVAC diagnostic reports' }},
+  { data: { id:'s-hvac-setup',      label:'hvac-setup',      type:'skill', project:'hvac', desc:'HVAC project setup' }},
+  { data: { id:'s-hvac-todo',       label:'hvac-todo',       type:'skill', project:'hvac', desc:'HVAC task management' }},
+  { data: { id:'s-hvac-memory',     label:'hvac-memory',     type:'skill', project:'hvac', skillDir:`/Users/sergevilleneuve/Documents/Projects/HVAC_ideas/skills`, desc:'Conversation memory for HVAC sessions via MCP' }},
+  { data: { id:'s-archon-task',     label:'archon-task',     type:'skill', project:'hvac', desc:'Archon task lifecycle for HVAC' }},
+  { data: { id:'s-hvac-idea',       label:'idea-capture (hvac)',type:'skill',project:'hvac',desc:'Idea capture scoped to HVAC project' }},
+
+  // MEDICAL
+  { data: { id:'s-medical-memory', label:'Medical-memory', type:'skill', project:'medical', desc:'Conversation persistence for medical sessions via MCP' }},
+
+  // IDEA WEB
+  { data: { id:'s-web-markdown', label:'web-markdown-renderer', type:'skill', project:'idea-web', desc:'React + Tailwind document-style Markdown renderer' }},
+
+  // SUPERPOWERS GROUPS
+  { data: { id:'g-sp-workflow', label:'Workflow',       type:'group', project:'superpowers', desc:'Sprint planning, execution, and delivery skills' }},
+  { data: { id:'g-sp-agents',   label:'Agent Patterns', type:'group', project:'superpowers', desc:'Multi-agent orchestration and delegation skills' }},
+  { data: { id:'g-sp-code',     label:'Code Quality',   type:'group', project:'superpowers', desc:'Code quality, debugging, and testing skills' }},
+  { data: { id:'g-sp-review',   label:'Review',         type:'group', project:'superpowers', desc:'Code review submission and processing skills' }},
+
+  // SUPERPOWERS SKILLS
+  { data: { id:'s-brainstorming',    label:'brainstorming',              type:'skill', project:'superpowers', desc:'Structured brainstorming sessions' }},
+  { data: { id:'s-executing-plans',  label:'executing-plans',            type:'skill', project:'superpowers', desc:'Execute written plans step-by-step' }},
+  { data: { id:'s-finish-branch',    label:'finishing-a-dev-branch',     type:'skill', project:'superpowers', desc:'Branch completion checklist' }},
+  { data: { id:'s-writing-plans',    label:'writing-plans',              type:'skill', project:'superpowers', desc:'Write structured implementation plans' }},
+  { data: { id:'s-dispatch-agents',  label:'dispatching-parallel-agents',type:'skill', project:'superpowers', desc:'Launch and coordinate parallel sub-agents' }},
+  { data: { id:'s-subagent-dev',     label:'subagent-driven-development',type:'skill', project:'superpowers', desc:'Delegate implementation to subagents' }},
+  { data: { id:'s-using-superpowers',label:'using-superpowers',          type:'skill', project:'superpowers', desc:'Meta-skill: how to find and use all skills' }},
+  { data: { id:'s-debugging',        label:'systematic-debugging',       type:'skill', project:'superpowers', desc:'Structured fault isolation' }},
+  { data: { id:'s-tdd',              label:'test-driven-development',     type:'skill', project:'superpowers', desc:'TDD workflow enforcement' }},
+  { data: { id:'s-worktrees',        label:'using-git-worktrees',         type:'skill', project:'superpowers', desc:'Git worktree workflows' }},
+  { data: { id:'s-verification',     label:'verification-before-completion',type:'skill',project:'superpowers',desc:'Pre-completion verification checklist' }},
+  { data: { id:'s-recv-review',      label:'receiving-code-review',      type:'skill', project:'superpowers', desc:'Process and apply review feedback' }},
+  { data: { id:'s-req-review',       label:'requesting-code-review',     type:'skill', project:'superpowers', desc:'Prepare and submit code for review' }},
+  { data: { id:'s-writing-skills',   label:'writing-skills',             type:'skill', project:'superpowers', desc:'Author new SKILL.md files' }},
+
+  // PLUGIN SKILLS
+  { data: { id:'s-auto-recommender', label:'claude-automation-recommender', pkg:'claude-code-setup',    type:'skill', project:'plugins', desc:'Analyze codebase → recommend hooks, skills, MCPs, subagents' }},
+  { data: { id:'s-md-improver',      label:'claude-md-improver',           pkg:'claude-md-management', type:'skill', project:'plugins', desc:'Audit and improve CLAUDE.md files across a repo' }},
+  { data: { id:'s-playground',       label:'playground',                   pkg:'playground',           type:'skill', project:'plugins', desc:'Experimental skill sandbox' }},
+  { data: { id:'s-example-skill',    label:'example-skill',                pkg:'example-plugin',       type:'skill', project:'plugins', desc:'Plugin development example / template' }},
+
+  // IDEAS
+  { data: { id:'s-idea-capture', label:'idea-capture', type:'skill', project:'ideas', desc:'Unified idea capture across all AI assistants via IdeaManager JSON DB' }},
+
+  // ─── EDGES ───────────────────────────────────────────────────────────────
+  // root → projects  [trunk]
+  { data: { source:'root', target:'p-alfred' },     classes:'trunk' },
+  { data: { source:'root', target:'p-hvac' },       classes:'trunk' },
+  { data: { source:'root', target:'p-medical' },    classes:'trunk' },
+  { data: { source:'root', target:'p-idea-web' },   classes:'trunk' },
+  { data: { source:'root', target:'p-superpowers' },classes:'trunk' },
+  { data: { source:'root', target:'p-plugins' },    classes:'trunk' },
+  { data: { source:'root', target:'p-ideas' },      classes:'trunk' },
+
+  // alfred → groups  [trunk]
+  { data: { source:'p-alfred', target:'g-alfred-core' },   classes:'trunk' },
+  { data: { source:'p-alfred', target:'g-bmad-agents' },   classes:'trunk' },
+  { data: { source:'p-alfred', target:'g-bmad-workflow' },  classes:'trunk' },
+  { data: { source:'p-alfred', target:'g-bmad-orch' },     classes:'trunk' },
+
+  // alfred core
+  { data: { source:'g-alfred-core', target:'s-alfred-agent' }},
+  { data: { source:'g-alfred-core', target:'s-alfred-archon' }},
+  { data: { source:'g-alfred-core', target:'s-alfred-db' }},
+  { data: { source:'g-alfred-core', target:'s-alfred-debug' }},
+  { data: { source:'g-alfred-core', target:'s-alfred-dev' }},
+  { data: { source:'g-alfred-core', target:'s-alfred-integration' }},
+  { data: { source:'g-alfred-core', target:'s-alfred-release' }},
+  { data: { source:'g-alfred-core', target:'s-alfred-setup' }},
+  { data: { source:'g-alfred-core', target:'s-alfred-test' }},
+  { data: { source:'g-alfred-core', target:'s-validate' }},
+
+  // bmad agents
+  { data: { source:'g-bmad-agents', target:'s-bmad-analyst' }},
+  { data: { source:'g-bmad-agents', target:'s-bmad-architect' }},
+  { data: { source:'g-bmad-agents', target:'s-bmad-dev' }},
+  { data: { source:'g-bmad-agents', target:'s-bmad-pm' }},
+  { data: { source:'g-bmad-agents', target:'s-bmad-po' }},
+  { data: { source:'g-bmad-agents', target:'s-bmad-qa' }},
+  { data: { source:'g-bmad-agents', target:'s-bmad-sm' }},
+  { data: { source:'g-bmad-agents', target:'s-bmad-ux-expert' }},
+
+  // bmad workflow
+  { data: { source:'g-bmad-workflow', target:'s-bmad-adv-elicitation' }},
+  { data: { source:'g-bmad-workflow', target:'s-bmad-apply-qa' }},
+  { data: { source:'g-bmad-workflow', target:'s-bmad-correct-course' }},
+  { data: { source:'g-bmad-workflow', target:'s-bmad-deep-research' }},
+  { data: { source:'g-bmad-workflow', target:'s-bmad-create-doc' }},
+  { data: { source:'g-bmad-workflow', target:'s-bmad-create-story' }},
+  { data: { source:'g-bmad-workflow', target:'s-bmad-doc-project' }},
+  { data: { source:'g-bmad-workflow', target:'s-bmad-exec-checklist' }},
+  { data: { source:'g-bmad-workflow', target:'s-bmad-brainstorm' }},
+  { data: { source:'g-bmad-workflow', target:'s-bmad-gen-frontend' }},
+  { data: { source:'g-bmad-workflow', target:'s-bmad-index-docs' }},
+  { data: { source:'g-bmad-workflow', target:'s-bmad-kb-mode' }},
+  { data: { source:'g-bmad-workflow', target:'s-bmad-nfr-assess' }},
+  { data: { source:'g-bmad-workflow', target:'s-bmad-qa-gate' }},
+  { data: { source:'g-bmad-workflow', target:'s-bmad-review-story' }},
+  { data: { source:'g-bmad-workflow', target:'s-bmad-risk-profile' }},
+  { data: { source:'g-bmad-workflow', target:'s-bmad-shard-doc' }},
+  { data: { source:'g-bmad-workflow', target:'s-bmad-test-design' }},
+  { data: { source:'g-bmad-workflow', target:'s-bmad-trace-reqs' }},
+  { data: { source:'g-bmad-workflow', target:'s-bmad-validate-story' }},
+
+  // bmad orchestration
+  { data: { source:'g-bmad-orch', target:'s-bmad-master' }},
+  { data: { source:'g-bmad-orch', target:'s-bmad-orch' }},
+  { data: { source:'g-bmad-orch', target:'s-bmad-bf-epic' }},
+  { data: { source:'g-bmad-orch', target:'s-bmad-bf-story' }},
+  { data: { source:'g-bmad-orch', target:'s-bmad-risk-adv' }},
+
+  // hvac  [trunk for group links]
+  { data: { source:'p-hvac', target:'g-hvac-core' }, classes:'trunk' },
+  { data: { source:'p-hvac', target:'g-hvac-ops' },  classes:'trunk' },
+  { data: { source:'p-hvac', target:'s-hvac-memory' }},
+  { data: { source:'p-hvac', target:'s-archon-task' }},
+  { data: { source:'p-hvac', target:'s-hvac-idea' }},
+  { data: { source:'g-hvac-core', target:'s-hvac-agent' }},
+  { data: { source:'g-hvac-core', target:'s-hvac-diagnostic' }},
+  { data: { source:'g-hvac-core', target:'s-hvac-mcp' }},
+  { data: { source:'g-hvac-ops',  target:'s-hvac-mindmap' }},
+  { data: { source:'g-hvac-ops',  target:'s-hvac-reminder' }},
+  { data: { source:'g-hvac-ops',  target:'s-hvac-report' }},
+  { data: { source:'g-hvac-ops',  target:'s-hvac-setup' }},
+  { data: { source:'g-hvac-ops',  target:'s-hvac-todo' }},
+
+  // medical
+  { data: { source:'p-medical', target:'s-medical-memory' }},
+
+  // idea-web
+  { data: { source:'p-idea-web', target:'s-web-markdown' }},
+
+  // superpowers  [trunk for group links]
+  { data: { source:'p-superpowers', target:'g-sp-workflow' }, classes:'trunk' },
+  { data: { source:'p-superpowers', target:'g-sp-agents' },   classes:'trunk' },
+  { data: { source:'p-superpowers', target:'g-sp-code' },     classes:'trunk' },
+  { data: { source:'p-superpowers', target:'g-sp-review' },   classes:'trunk' },
+  { data: { source:'g-sp-workflow', target:'s-brainstorming' }},
+  { data: { source:'g-sp-workflow', target:'s-executing-plans' }},
+  { data: { source:'g-sp-workflow', target:'s-finish-branch' }},
+  { data: { source:'g-sp-workflow', target:'s-writing-plans' }},
+  { data: { source:'g-sp-agents',   target:'s-dispatch-agents' }},
+  { data: { source:'g-sp-agents',   target:'s-subagent-dev' }},
+  { data: { source:'g-sp-agents',   target:'s-using-superpowers' }},
+  { data: { source:'g-sp-code',     target:'s-debugging' }},
+  { data: { source:'g-sp-code',     target:'s-tdd' }},
+  { data: { source:'g-sp-code',     target:'s-worktrees' }},
+  { data: { source:'g-sp-code',     target:'s-verification' }},
+  { data: { source:'g-sp-review',   target:'s-recv-review' }},
+  { data: { source:'g-sp-review',   target:'s-req-review' }},
+  { data: { source:'g-sp-review',   target:'s-writing-skills' }},
+
+  // plugins
+  { data: { source:'p-plugins', target:'s-auto-recommender' }},
+  { data: { source:'p-plugins', target:'s-md-improver' }},
+  { data: { source:'p-plugins', target:'s-playground' }},
+  { data: { source:'p-plugins', target:'s-example-skill' }},
+
+  // ideas
+  { data: { source:'p-ideas', target:'s-idea-capture' }},
+];
+
+// ─── HIERARCHICAL LAYOUT BUILDER ─────────────────────────────────────────────
+// Defines the project → group → skill tree for position calculation
+const HIERARCHY = [
+  { pid:'p-alfred', groups:[
+    { gid:'g-alfred-core',   skills:['s-alfred-agent','s-alfred-archon','s-alfred-db','s-alfred-debug','s-alfred-dev','s-alfred-integration','s-alfred-release','s-alfred-setup','s-alfred-test','s-validate'] },
+    { gid:'g-bmad-agents',   skills:['s-bmad-analyst','s-bmad-architect','s-bmad-dev','s-bmad-pm','s-bmad-po','s-bmad-qa','s-bmad-sm','s-bmad-ux-expert'] },
+    { gid:'g-bmad-workflow',  skills:['s-bmad-adv-elicitation','s-bmad-apply-qa','s-bmad-correct-course','s-bmad-deep-research','s-bmad-create-doc','s-bmad-create-story','s-bmad-doc-project','s-bmad-exec-checklist','s-bmad-brainstorm','s-bmad-gen-frontend','s-bmad-index-docs','s-bmad-kb-mode','s-bmad-nfr-assess','s-bmad-qa-gate','s-bmad-review-story','s-bmad-risk-profile','s-bmad-shard-doc','s-bmad-test-design','s-bmad-trace-reqs','s-bmad-validate-story'] },
+    { gid:'g-bmad-orch',      skills:['s-bmad-master','s-bmad-orch','s-bmad-bf-epic','s-bmad-bf-story','s-bmad-risk-adv'] },
+  ]},
+  { pid:'p-hvac', groups:[
+    { gid:'g-hvac-core',  skills:['s-hvac-agent','s-hvac-diagnostic','s-hvac-mcp'] },
+    { gid:'g-hvac-ops',   skills:['s-hvac-mindmap','s-hvac-reminder','s-hvac-report','s-hvac-setup','s-hvac-todo'] },
+    { gid:null,            skills:['s-hvac-memory','s-archon-task','s-hvac-idea'] },
+  ]},
+  { pid:'p-medical',     groups:[{ gid:null, skills:['s-medical-memory'] }] },
+  { pid:'p-idea-web',    groups:[{ gid:null, skills:['s-web-markdown'] }] },
+  { pid:'p-superpowers', groups:[
+    { gid:'g-sp-workflow', skills:['s-brainstorming','s-executing-plans','s-finish-branch','s-writing-plans'] },
+    { gid:'g-sp-agents',   skills:['s-dispatch-agents','s-subagent-dev','s-using-superpowers'] },
+    { gid:'g-sp-code',     skills:['s-debugging','s-tdd','s-worktrees','s-verification'] },
+    { gid:'g-sp-review',   skills:['s-recv-review','s-req-review','s-writing-skills'] },
+  ]},
+  { pid:'p-plugins', groups:[{ gid:null, skills:['s-auto-recommender','s-md-improver','s-playground','s-example-skill'] }] },
+  { pid:'p-ideas',   groups:[{ gid:null, skills:['s-idea-capture'] }] },
+];
+
+// ─── RADIAL LAYOUT BUILDER ───────────────────────────────────────────────────
+// Each node orbits its direct parent (not root)
+const LR1 = 700;   // root   → project  orbit radius
+const LR2 = 460;   // project→ group    orbit radius
+const LR3 = 300;   // group  → skill    orbit radius
+
+// Parent lookup & snap radius per node id (built after HIERARCHY is defined)
+const NODE_PARENT = {};
+const NODE_SNAP_R  = {};
+
+function buildParentMap() {
+  HIERARCHY.forEach(proj => {
+    NODE_PARENT[proj.pid] = 'root';
+    NODE_SNAP_R[proj.pid] = LR1;
+    proj.groups.forEach(grp => {
+      if (grp.gid) {
+        NODE_PARENT[grp.gid] = proj.pid;
+        NODE_SNAP_R[grp.gid] = LR2;
+        grp.skills.forEach(sid => { NODE_PARENT[sid] = grp.gid; NODE_SNAP_R[sid] = LR3; });
+      } else {
+        grp.skills.forEach(sid => { NODE_PARENT[sid] = proj.pid; NODE_SNAP_R[sid] = LR2; });
+      }
+    });
+  });
+}
+buildParentMap();
+
+// Evenly fan N items around a base angle with a given spread (radians)
+function fanAngles(n, baseAngle, spread) {
+  if (n === 1) return [baseAngle];
+  return Array.from({ length: n }, (_, i) => baseAngle + (i / (n - 1) - 0.5) * spread);
+}
+
+function buildPositions() {
+  const pos = {};
+  pos['root'] = { x: 0, y: 0 };
+
+  const n = HIERARCHY.length;
+  HIERARCHY.forEach((proj, pi) => {
+    // Projects: evenly around root
+    const projAngle = (2 * Math.PI * pi / n) - Math.PI / 2;
+    const projX = Math.cos(projAngle) * LR1;
+    const projY = Math.sin(projAngle) * LR1;
+    pos[proj.pid] = { x: projX, y: projY };
+
+    const realGroups = proj.groups.filter(g => g.gid);
+    const nullSkills = proj.groups.filter(g => !g.gid).flatMap(g => g.skills);
+
+    // Slots: one per real group + one for null-group skills block
+    const slots = realGroups.length + (nullSkills.length ? 1 : 0);
+    const grpSpread = Math.min(Math.PI * 1.85, slots * 1.0 + 0.6);
+    const grpAngles = fanAngles(slots, projAngle, grpSpread);
+
+    realGroups.forEach((grp, gi) => {
+      const grpAngle = grpAngles[gi];
+      const grpX = projX + Math.cos(grpAngle) * LR2;
+      const grpY = projY + Math.sin(grpAngle) * LR2;
+      pos[grp.gid] = { x: grpX, y: grpY };
+
+      // Skills orbit their group
+      const ns = grp.skills.length;
+      const skillSpread = Math.min(Math.PI * 1.9, ns * 0.75 + 0.6);
+      fanAngles(ns, grpAngle, skillSpread).forEach((a, si) => {
+        pos[grp.skills[si]] = { x: grpX + Math.cos(a) * LR3, y: grpY + Math.sin(a) * LR3 };
+      });
+    });
+
+    // Null-group skills orbit the project directly (at LR2)
+    if (nullSkills.length) {
+      const base = grpAngles[realGroups.length];
+      const spread = Math.min(Math.PI * 1.8, nullSkills.length * 0.85 + 0.5);
+      fanAngles(nullSkills.length, base, spread).forEach((a, si) => {
+        pos[nullSkills[si]] = { x: projX + Math.cos(a) * LR2, y: projY + Math.sin(a) * LR2 };
+      });
+    }
+  });
+
+  return pos;
+}
+
+// ─── POSITION PERSISTENCE ────────────────────────────────────────────────────
+const POS_KEY = 'skills-mindmap-positions';
+
+function showSaveStatus(msg, color) {
+  const el = document.getElementById('save-status');
+  el.textContent = msg;
+  el.style.color = color || '#484f58';
+  clearTimeout(el._timer);
+  el._timer = setTimeout(() => { el.textContent = ''; }, 4000);
+}
+
+function validatePositions(saved) {
+  const required = ['root', ...HIERARCHY.map(p => p.pid)];
+  return saved && required.every(id => saved[id]);
+}
+
+function loadPositions() {
+  // 1. Try localStorage
+  try {
+    const raw = localStorage.getItem(POS_KEY);
+    if (raw) {
+      const saved = JSON.parse(raw);
+      if (validatePositions(saved)) return saved;
+    }
+  } catch(e) {}
+  // 2. Try embedded positions in the HTML file
+  try {
+    const raw = document.getElementById('saved-positions-data').textContent.trim();
+    if (raw && raw !== 'null') {
+      const saved = JSON.parse(raw);
+      if (validatePositions(saved)) return saved;
+    }
+  } catch(e) {}
+  return buildPositions();
+}
+
+async function savePositions() {
+  const positions = {};
+  cy.nodes().forEach(n => { positions[n.id()] = { ...n.position() }; });
+  const json = JSON.stringify(positions, null, 2);
+
+  // 1. Always save to localStorage
+  let localOk = false;
+  try { localStorage.setItem(POS_KEY, JSON.stringify(positions)); localOk = true; } catch(e) {}
+
+  // 2. Save JSON file via File System Access API (real Save dialog, works from file://)
+  if (window.showSaveFilePicker) {
+    try {
+      const fh = await window.showSaveFilePicker({
+        suggestedName: 'skills-mindmap-layout.json',
+        types: [{ description: 'JSON layout file', accept: { 'application/json': ['.json'] } }]
+      });
+      const writable = await fh.createWritable();
+      await writable.write(json);
+      await writable.close();
+      showSaveStatus('✓ Layout saved to JSON file', '#3fb950');
+      return;
+    } catch(e) {
+      if (e.name === 'AbortError') {
+        showSaveStatus(localOk ? '✓ Saved to browser (dialog cancelled)' : '— Cancelled', localOk ? '#3fb950' : '#484f58');
+        return;
+      }
+    }
+  }
+
+  // 3. Fallback: localStorage only
+  showSaveStatus(localOk ? '✓ Saved to browser storage' : '⚠ Save failed', localOk ? '#3fb950' : '#da3633');
+}
+
+function resetLayout() {
+  try { localStorage.removeItem(POS_KEY); } catch(e) {}
+  cy.layout({
+    name: 'preset',
+    positions: buildPositions(),
+    animate: true,
+    animationDuration: 600,
+    fit: false,
+  }).run();
+  setTimeout(centerOnRoot, 650);
+  showSaveStatus('Layout reset to default', '#484f58');
+}
+
+function importPositions(file) {
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      const positions = JSON.parse(ev.target.result);
+      if (!validatePositions(positions)) { showSaveStatus('⚠ Invalid layout file', '#da3633'); return; }
+      try { localStorage.setItem(POS_KEY, JSON.stringify(positions)); } catch(e) {}
+      cy.layout({ name: 'preset', positions, animate: true, animationDuration: 600 }).run();
+      showSaveStatus('✓ Layout imported', '#3fb950');
+    } catch(e) { showSaveStatus('⚠ Could not parse file', '#da3633'); }
+  };
+  reader.readAsText(file);
+}
+
+// ─── CYTOSCAPE INIT ──────────────────────────────────────────────────────────
+const cy = cytoscape({
+  container: document.getElementById('cy'),
+  elements,
+  style: [
+    {
+      selector: 'node',
+      style: {
+        'label': 'data(label)',
+        'text-valign': 'center',
+        'text-halign': 'center',
+        'font-size': ele => {
+          if (ele.data('type') === 'root')    return 13;
+          if (ele.data('type') === 'project') return 11;
+          if (ele.data('type') === 'group')   return 10;
+          return 9;
+        },
+        'font-family': "'SF Mono','Fira Code',monospace",
+        'font-weight': ele => ele.data('type') === 'root' || ele.data('type') === 'project' ? 700 : 400,
+        'background-color': ele => {
+          if (ele.data('needsReview')) return PROJECT_COLORS.review.bg;
+          const c = nodeColor(ele.data());
+          return c.bg;
+        },
+        'border-color': ele => {
+          if (ele.data('needsReview')) return PROJECT_COLORS.review.border;
+          const c = nodeColor(ele.data());
+          return c.border;
+        },
+        'border-width': ele => ele.data('type') === 'root' ? 3 : ele.data('type') === 'project' ? 2 : 1.5,
+        'color': ele => {
+          if (ele.data('needsReview')) return PROJECT_COLORS.review.text;
+          const c = nodeColor(ele.data());
+          return c.text;
+        },
+        'width': ele => {
+          if (ele.data('type') === 'root')    return 90;
+          if (ele.data('type') === 'project') return 75;
+          if (ele.data('type') === 'group')   return 65;
+          return 52;
+        },
+        'height': ele => {
+          if (ele.data('type') === 'root')    return 90;
+          if (ele.data('type') === 'project') return 75;
+          if (ele.data('type') === 'group')   return 65;
+          return 52;
+        },
+        'shape': ele => {
+          if (ele.data('type') === 'root')    return 'star';
+          if (ele.data('type') === 'project') return 'round-rectangle';
+          if (ele.data('type') === 'group')   return 'cut-rectangle';
+          return 'ellipse';
+        },
+        'text-wrap': 'wrap',
+        'text-max-width': ele => {
+          if (ele.data('type') === 'skill') return 60;
+          return 80;
+        },
+        'padding': 8,
+        'transition-property': 'background-color, border-color, opacity, width, height',
+        'transition-duration': '0.2s',
+      }
+    },
+    {
+      selector: 'edge',
+      style: {
+        'width': 1,
+        'line-color': '#8b98a8',
+        'target-arrow-shape': 'none',
+        'curve-style': 'straight',
+        'opacity': 0.9,
+        'transition-property': 'opacity, line-color, width',
+        'transition-duration': '0.2s',
+      }
+    },
+    // Trunk edges (root→project, project→group): lighter
+    {
+      selector: 'edge.trunk',
+      style: { 'opacity': 0.9, 'line-color': '#8b98a8' }
+    },
+    // Highlighted node
+    {
+      selector: 'node.highlighted',
+      style: {
+        'border-width': 3,
+        'border-color': '#f1f6ff',
+        'z-index': 10,
+        'font-weight': 700,
+        'shadow-blur': 12,
+        'shadow-color': '#58a6ff',
+        'shadow-opacity': 0.8,
+        'shadow-offset-x': 0,
+        'shadow-offset-y': 0,
+      }
+    },
+    // Selected (clicked) node
+    {
+      selector: 'node.selected',
+      style: {
+        'border-color': '#f0f6fc',
+        'border-width': 4,
+        'z-index': 20,
+      }
+    },
+    // Group-selected nodes (rubber band)
+    {
+      selector: 'node.group-selected',
+      style: {
+        'border-color': '#f0a500',
+        'border-width': 4,
+        'z-index': 25,
+        'shadow-blur': 16,
+        'shadow-color': '#f0a500',
+        'shadow-opacity': 0.7,
+        'shadow-offset-x': 0,
+        'shadow-offset-y': 0,
+      }
+    },
+    // Dimmed elements
+    {
+      selector: '.dimmed',
+      style: { 'opacity': 0.08 }
+    },
+    // Search match
+    {
+      selector: 'node.search-match',
+      style: {
+        'border-color': '#f1f6ff',
+        'border-width': 3,
+        'z-index': 15,
+      }
+    },
+  ],
+  layout: {
+    name: 'preset',
+    positions: loadPositions(),
+    animate: true,
+    animationDuration: 800,
+    padding: 60,
+    fit: true,
+  },
+  wheelSensitivity: 0.3,
+  minZoom: 0.1,
+  maxZoom: 3.0,
+});
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+let selectedNode = null;
+let currentDepth = 1;
+let focusMode = false;
+
+// Rubber band / group-move state
+let rbStart       = null;   // {x,y} page coords at mousedown
+let groupDragBase = {};     // {nodeId: {x,y}} at drag start
+let dragLeader    = null;   // node being directly dragged
+let leaderStart   = null;   // its position at drag start
+let isDraggingGroup = false;
+
+// Undo stack — each entry is a {nodeId: {x,y}} snapshot
+const undoStack = [];
+const UNDO_LIMIT = 20;
+
+// ─── SCOPE TRAVERSAL ─────────────────────────────────────────────────────────
+// DOWN: all descendants (unlimited); UP: parentHops levels of ancestors only
+function getScopeNodes(startId, parentHops) {
+  const visited = new Set([startId]);
+
+  // All descendants — follow edges source→target
+  const downQ = [startId];
+  while (downQ.length) {
+    const cur = downQ.shift();
+    cy.edges().forEach(e => {
+      if (e.source().id() === cur) {
+        const child = e.target().id();
+        if (!visited.has(child)) { visited.add(child); downQ.push(child); }
+      }
+    });
+  }
+
+  // Ancestors — follow edges target→source, limited to parentHops levels
+  let frontier = [startId];
+  for (let hop = 0; hop < parentHops; hop++) {
+    const next = [];
+    frontier.forEach(id => {
+      cy.edges().forEach(e => {
+        if (e.target().id() === id) {
+          const parent = e.source().id();
+          if (!visited.has(parent)) { visited.add(parent); next.push(parent); }
+        }
+      });
+    });
+    frontier = next;
+    if (!frontier.length) break;
+  }
+
+  return visited;
+}
+
+// Find path from root to a node (BFS)
+function findPath(targetId) {
+  const queue = [['root']];
+  const seen = new Set(['root']);
+  while (queue.length) {
+    const path = queue.shift();
+    const current = path[path.length - 1];
+    if (current === targetId) return path;
+    cy.edges().forEach(e => {
+      if (e.source().id() === current) {
+        const next = e.target().id();
+        if (!seen.has(next)) {
+          seen.add(next);
+          queue.push([...path, next]);
+        }
+      }
+    });
+  }
+  return [targetId];
+}
+
+// ─── HIGHLIGHT LOGIC ─────────────────────────────────────────────────────────
+function highlightFrom(node, depth) {
+  const inScope = getScopeNodes(node.id(), depth);
+
+  cy.elements().removeClass('highlighted selected dimmed search-match');
+
+  // Dim all first
+  cy.elements().addClass('dimmed');
+
+  // Show scope
+  cy.nodes().forEach(n => {
+    if (inScope.has(n.id())) {
+      n.removeClass('dimmed').addClass('highlighted');
+    }
+  });
+  cy.edges().forEach(e => {
+    if (inScope.has(e.source().id()) && inScope.has(e.target().id())) {
+      e.removeClass('dimmed');
+    }
+  });
+
+  // Mark selected
+  node.removeClass('dimmed highlighted').addClass('selected highlighted');
+
+  // Focus mode: hide dimmed nodes
+  if (focusMode) {
+    cy.nodes('.dimmed').style('display', 'none');
+    cy.edges('.dimmed').style('display', 'none');
+  } else {
+    cy.elements().style('display', 'element');
+  }
+
+  // Update info panel
+  updateInfoPanel(node, inScope, depth);
+}
+
+function centerOnRoot() {
+  cy.fit(cy.elements(), 50);
+  cy.center(cy.$('#root'));
+}
+
+function clearHighlights() {
+  cy.elements().removeClass('highlighted selected dimmed search-match');
+  cy.elements().style('display', 'element');
+  selectedNode = null;
+  focusMode = false;
+  document.getElementById('btn-focus').textContent = '⊙ Focus Mode (hide others)';
+  document.getElementById('node-empty').style.display = '';
+  document.getElementById('node-detail').style.display = 'none';
+  document.getElementById('stat-selected').textContent = 'none';
+  document.getElementById('stat-depth').textContent = '—';
+  document.getElementById('stat-visible').textContent = cy.nodes().length;
+}
+
+function resetView() {
+  document.querySelectorAll('.legend-row').forEach(r => r.classList.remove('legend-active'));
+  clearHighlights();
+  // Animate all nodes back to their saved orbit positions
+  cy.layout({
+    name: 'preset',
+    positions: loadPositions(),
+    animate: true,
+    animationDuration: 600,
+    fit: false,
+  }).run();
+  setTimeout(centerOnRoot, 650);
+}
+
+// ─── INFO PANEL ──────────────────────────────────────────────────────────────
+const BADGE_COLORS = {
+  root: '#c9d1d9', project: '#58a6ff', group: '#3fb950',
+  alfred: '#a371f7', hvac: '#f78166', medical: '#ffa657',
+  'idea-web': '#ffa657', ideas: '#ffa657', superpowers: '#79c0ff', plugins: '#ff7b72'
+};
+
+function updateInfoPanel(node, inScope, depth) {
+  const d = node.data();
+  document.getElementById('node-empty').style.display = 'none';
+  document.getElementById('node-detail').style.display = '';
+  document.getElementById('node-name').textContent = d.label;
+
+  const badge = document.getElementById('node-badge');
+  badge.textContent = d.needsReview ? '⚠️ Needs Review' : (d.type || '?');
+  const badgeColor = d.needsReview ? '#da3633' : (BADGE_COLORS[d.project] || BADGE_COLORS[d.type] || '#484f58');
+  badge.style.background = badgeColor + '30';
+  badge.style.color = badgeColor;
+  badge.style.border = `1px solid ${badgeColor}50`;
+
+  document.getElementById('node-desc').textContent = d.desc || '';
+
+  const childCount = cy.edges().filter(e => e.source().id() === node.id()).length;
+  const parentCount = cy.edges().filter(e => e.target().id() === node.id()).length;
+  document.getElementById('node-stats').innerHTML =
+    `<span>${inScope.size}</span> nodes visible<br>` +
+    `<span>${childCount}</span> children · <span>${parentCount}</span> parent(s) shown (${depth} level${depth!==1?'s':''} up)`;
+
+  // Breadcrumb
+  const path = findPath(node.id());
+  const pathLabels = path.map(id => {
+    const n = cy.$(`#${id}`);
+    return n.length ? `<span>${n.data('label')}</span>` : id;
+  });
+  document.getElementById('breadcrumb').innerHTML = pathLabels.join(' › ');
+
+  // Status bar
+  document.getElementById('stat-selected').textContent = d.label;
+  document.getElementById('stat-depth').textContent = `${depth} parent lvl`;
+  document.getElementById('stat-visible').textContent = inScope.size;
+}
+
+// ─── ORBIT RINGS ─────────────────────────────────────────────────────────────
+// Draw a ring around each parent node at its children's orbit radius
+const SNAP_TOLERANCE = 55; // px in graph coords
+
+const orbitCanvas = document.createElement('canvas');
+orbitCanvas.style.cssText = 'position:absolute;top:0;left:0;pointer-events:none;z-index:1;';
+document.getElementById('cy').appendChild(orbitCanvas);
+
+let isDragging = false;
+
+function drawOrbitRings() {
+  const container = document.getElementById('cy');
+  const w = container.offsetWidth;
+  const h = container.offsetHeight;
+  orbitCanvas.width  = w;
+  orbitCanvas.height = h;
+  const ctx  = orbitCanvas.getContext('2d');
+  ctx.clearRect(0, 0, w, h);
+
+  const zoom = cy.zoom();
+  const pan  = cy.pan();
+  const alpha = isDragging ? 2.8 : 1;
+
+  function ring(pos, r, color, dash) {
+    const sx = pos.x * zoom + pan.x;
+    const sy = pos.y * zoom + pan.y;
+    const sr = r * zoom;
+    if (sr < 2) return;
+    ctx.beginPath();
+    ctx.arc(sx, sy, sr, 0, Math.PI * 2);
+    // Boost opacity when dragging
+    ctx.strokeStyle = color.replace(/[\d.]+\)$/, v => Math.min(0.9, parseFloat(v) * alpha) + ')');
+    ctx.lineWidth   = isDragging ? 1.5 : 1;
+    ctx.setLineDash(dash);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // Ring around root (projects orbit here)
+  const rootPos = cy.$('#root').position();
+  if (rootPos) ring(rootPos, LR1, 'rgba(88,166,255,0.20)', [10,6]);
+
+  // Ring around each project (groups orbit here)
+  HIERARCHY.forEach(proj => {
+    const pn = cy.$('#' + proj.pid);
+    if (!pn.length) return;
+    ring(pn.position(), LR2, 'rgba(63,185,80,0.16)', [7,5]);
+
+    // Ring around each group (skills orbit here)
+    proj.groups.forEach(grp => {
+      if (!grp.gid) return;
+      const gn = cy.$('#' + grp.gid);
+      if (gn.length) ring(gn.position(), LR3, 'rgba(230,160,60,0.13)', [5,4]);
+    });
+  });
+}
+
+cy.on('render pan zoom', drawOrbitRings);
+window.addEventListener('resize', drawOrbitRings);
+
+// Cascade-snap all descendants to their own orbit rings after a parent moves.
+// Each child snaps to its ring radius while keeping its current angle from its parent.
+function cascadeSnap(parentNode) {
+  parentNode.outgoers('node').forEach(child => {
+    const pPos  = parentNode.position();
+    const cPos  = child.position();
+    const angle = Math.atan2(cPos.y - pPos.y, cPos.x - pPos.x);
+    const r     = NODE_SNAP_R[child.id()];
+    if (!r) return;
+    child.animate({
+      position: { x: pPos.x + Math.cos(angle) * r,
+                  y: pPos.y + Math.sin(angle) * r }
+    }, { duration: 180, easing: 'ease-out', complete: () => cascadeSnap(child) });
+  });
+}
+
+// Snap dragged node toward its parent's orbit ring, then cascade to children.
+cy.on('grab', 'node', () => { isDragging = true; drawOrbitRings(); });
+cy.on('dragfree', 'node', evt => {
+  isDragging = false;
+  const node     = evt.target;
+  const parentId = NODE_PARENT[node.id()];
+  const targetR  = NODE_SNAP_R[node.id()];
+
+  if (!parentId || !targetR) {
+    cascadeSnap(node);
+    drawOrbitRings();
+    return;
+  }
+
+  const pNode = cy.$('#' + parentId);
+  if (!pNode.length) { cascadeSnap(node); drawOrbitRings(); return; }
+
+  const pPos = pNode.position();
+  const nPos = node.position();
+  const dx   = nPos.x - pPos.x;
+  const dy   = nPos.y - pPos.y;
+  const dist = Math.hypot(dx, dy);
+
+  if (Math.abs(dist - targetR) < SNAP_TOLERANCE) {
+    const angle = Math.atan2(dy, dx);
+    node.animate({
+      position: { x: pPos.x + Math.cos(angle) * targetR,
+                  y: pPos.y + Math.sin(angle) * targetR }
+    }, { duration: 180, easing: 'ease-out', complete: () => cascadeSnap(node) });
+  } else {
+    cascadeSnap(node);
+  }
+  setTimeout(drawOrbitRings, 200);
+});
+
+// ─── EVENTS ──────────────────────────────────────────────────────────────────
+cy.on('tap', 'node', evt => {
+  selectedNode = evt.target;
+  highlightFrom(selectedNode, currentDepth);
+});
+
+cy.on('tap', evt => {
+  if (evt.target === cy) { clearHighlights(); clearGroupSelection(); }
+});
+
+document.getElementById('depth-slider').addEventListener('input', function() {
+  currentDepth = parseInt(this.value);
+  document.getElementById('depth-display').textContent = currentDepth;
+  if (selectedNode) highlightFrom(selectedNode, currentDepth);
+});
+
+document.getElementById('btn-reset').addEventListener('click', () => {
+  resetView();
+});
+
+document.getElementById('btn-save-pos').addEventListener('click', savePositions);
+document.getElementById('btn-reset-layout').addEventListener('click', resetLayout);
+document.getElementById('file-import').addEventListener('change', function() {
+  if (this.files[0]) { importPositions(this.files[0]); this.value = ''; }
+});
+
+document.getElementById('btn-focus').addEventListener('click', () => {
+  focusMode = !focusMode;
+  document.getElementById('btn-focus').textContent = focusMode
+    ? '◎ Show All (exit focus)'
+    : '⊙ Focus Mode (hide others)';
+  if (selectedNode) highlightFrom(selectedNode, currentDepth);
+  else if (focusMode) {
+    cy.elements().style('display', 'element');
+    focusMode = false;
+    document.getElementById('btn-focus').textContent = '⊙ Focus Mode (hide others)';
+  }
+});
+
+// Search
+document.getElementById('search-box').addEventListener('input', function() {
+  const q = this.value.toLowerCase().trim();
+  cy.elements().removeClass('search-match dimmed highlighted selected');
+  cy.elements().style('display', 'element');
+  selectedNode = null;
+
+  if (!q) return;
+
+  const matches = cy.nodes().filter(n =>
+    n.data('label').toLowerCase().includes(q) ||
+    (n.data('desc') || '').toLowerCase().includes(q)
+  );
+
+  cy.elements().addClass('dimmed');
+  matches.forEach(n => {
+    n.removeClass('dimmed').addClass('search-match highlighted');
+    // Also show their edges
+    cy.edges().forEach(e => {
+      if (e.source().id() === n.id() || e.target().id() === n.id()) {
+        e.removeClass('dimmed');
+      }
+    });
+  });
+
+  document.getElementById('stat-selected').textContent = `"${q}" — ${matches.length} match${matches.length !== 1 ? 'es' : ''}`;
+  document.getElementById('stat-visible').textContent = matches.length;
+
+  // Zoom to matches if any
+  if (matches.length > 0 && matches.length < 20) {
+    cy.animate({ fit: { eles: matches, padding: 80 }, duration: 500 });
+  }
+});
+
+// ─── GRAPH STATS ─────────────────────────────────────────────────────────────
+function updateStats() {
+  const nodeCount  = cy.nodes().length;
+  const skillCount = cy.nodes().filter(n => n.data('type') === 'skill').length;
+  const groupCount = cy.nodes().filter(n => n.data('type') === 'group').length;
+  const projCount  = cy.nodes().filter(n => n.data('type') === 'project').length;
+  const reviewCount= cy.nodes().filter(n => n.data('needsReview')).length;
+
+  document.getElementById('graph-stats').innerHTML =
+    `Total nodes: <b style="color:#58a6ff">${nodeCount}</b><br>` +
+    `Projects: <b style="color:#58a6ff">${projCount}</b><br>` +
+    `Groups: <b style="color:#3fb950">${groupCount}</b><br>` +
+    `Skills: <b style="color:#a371f7">${skillCount}</b><br>` +
+    `⚠️ Needs Review: <b style="color:#da3633">${reviewCount}</b>`;
+
+  document.getElementById('stat-total').textContent = skillCount;
+  document.getElementById('stat-visible').textContent = nodeCount;
+}
+
+updateStats();
+
+// Show saved-layout indicator on load
+(function() {
+  let src = null;
+  try { if (localStorage.getItem(POS_KEY)) src = 'browser storage'; } catch(e) {}
+  if (!src) {
+    try {
+      const raw = document.getElementById('saved-positions-data').textContent.trim();
+      if (raw && raw !== 'null') src = 'embedded in file';
+    } catch(e) {}
+  }
+  if (src) showSaveStatus('📌 Custom layout loaded (' + src + ')', '#58a6ff');
+})();
+
+// ─── RUBBER BAND SELECTION ───────────────────────────────────────────────────
+const selBox       = document.getElementById('selection-box');
+const cyContainer  = document.getElementById('cy');
+const btnClearGroup = document.getElementById('btn-clear-group');
+
+function clearGroupSelection() {
+  cy.nodes().removeClass('group-selected');
+  btnClearGroup.style.display = 'none';
+  document.getElementById('stat-selected').textContent = 'none';
+}
+btnClearGroup.addEventListener('click', clearGroupSelection);
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') { clearGroupSelection(); return; }
+
+  // Cmd+Z (Mac) / Ctrl+Z (Win) — undo last move
+  if (e.key === 'z' && (e.metaKey || e.ctrlKey) && !e.shiftKey) {
+    e.preventDefault();
+    const snapshot = undoStack.pop();
+    if (!snapshot) return;
+    Object.entries(snapshot).forEach(([id, pos]) => {
+      const n = cy.$('#' + id);
+      if (n.length) n.animate({ position: pos }, { duration: 200, easing: 'ease-out' });
+    });
+    setTimeout(drawOrbitRings, 220);
+  }
+});
+
+// Suppress browser context menu — right-click is used for rubber band
+cyContainer.addEventListener('contextmenu', (e) => e.preventDefault());
+
+cyContainer.addEventListener('mousedown', (e) => {
+  if (e.button !== 2) return;  // right-click only
+  const rect = cyContainer.getBoundingClientRect();
+  const rx = e.clientX - rect.left;
+  const ry = e.clientY - rect.top;
+  rbStart = { x: e.clientX, y: e.clientY };
+  selBox.style.left    = rx + 'px';
+  selBox.style.top     = ry + 'px';
+  selBox.style.width   = '0px';
+  selBox.style.height  = '0px';
+  selBox.style.display = 'block';
+  e.preventDefault();
+});
+
+document.addEventListener('mousemove', (e) => {
+  if (!rbStart) return;
+  const rect = cyContainer.getBoundingClientRect();
+  const x1 = Math.min(rbStart.x, e.clientX) - rect.left;
+  const y1 = Math.min(rbStart.y, e.clientY) - rect.top;
+  selBox.style.left   = x1 + 'px';
+  selBox.style.top    = y1 + 'px';
+  selBox.style.width  = Math.abs(e.clientX - rbStart.x) + 'px';
+  selBox.style.height = Math.abs(e.clientY - rbStart.y) + 'px';
+});
+
+document.addEventListener('mouseup', (e) => {
+  if (!rbStart || e.button !== 2) return;
+  const rect = cyContainer.getBoundingClientRect();
+  const rx1 = Math.min(rbStart.x, e.clientX) - rect.left;
+  const ry1 = Math.min(rbStart.y, e.clientY) - rect.top;
+  const rx2 = rx1 + Math.abs(e.clientX - rbStart.x);
+  const ry2 = ry1 + Math.abs(e.clientY - rbStart.y);
+  selBox.style.display = 'none';
+  rbStart = null;
+
+  if (rx2 - rx1 < 5 && ry2 - ry1 < 5) return;  // too small — ignore
+
+  const captured = cy.nodes().filter(n => {
+    if (n.hidden()) return false;
+    const p = n.renderedPosition();
+    return p.x >= rx1 && p.x <= rx2 && p.y >= ry1 && p.y <= ry2;
+  });
+
+  if (captured.length > 0) {
+    cy.nodes().removeClass('group-selected');
+    captured.addClass('group-selected');
+    btnClearGroup.style.display = 'block';
+    document.getElementById('stat-selected').textContent = captured.length + ' grouped';
+  }
+});
+
+// ─── GROUP MOVEMENT ───────────────────────────────────────────────────────────
+// Dragging a parent node moves all its descendants with it.
+// Rubber-band group-selected nodes also move together.
+cy.on('grabon', 'node', (e) => {
+  const node = e.target;
+  dragLeader    = null;
+  leaderStart   = null;
+  groupDragBase = {};
+  isDraggingGroup = false;
+
+  // Snapshot positions for undo (node + all descendants)
+  const snapshot = {};
+  snapshot[node.id()] = { ...node.position() };
+  node.successors('node').forEach(n => { snapshot[n.id()] = { ...n.position() }; });
+  if (node.hasClass('group-selected')) {
+    cy.nodes('.group-selected').forEach(n => { snapshot[n.id()] = { ...n.position() }; });
+  }
+  undoStack.push(snapshot);
+  if (undoStack.length > UNDO_LIMIT) undoStack.shift();
+
+  let followers;
+  if (node.hasClass('group-selected')) {
+    // rubber-band selection: move all selected nodes together
+    followers = cy.nodes('.group-selected').filter(n => n.id() !== node.id());
+  } else {
+    // parent-drag: move all descendants automatically
+    followers = node.successors('node');
+  }
+
+  if (followers && followers.length > 0) {
+    dragLeader  = node;
+    leaderStart = { ...node.position() };
+    followers.forEach(n => {
+      groupDragBase[n.id()] = { ...n.position() };
+    });
+    isDraggingGroup = true;
+  }
+});
+
+cy.on('drag', 'node', (e) => {
+  if (!isDraggingGroup || !dragLeader || e.target.id() !== dragLeader.id()) return;
+  const dx = dragLeader.position().x - leaderStart.x;
+  const dy = dragLeader.position().y - leaderStart.y;
+  Object.entries(groupDragBase).forEach(([id, base]) => {
+    const n = cy.$('#' + id);
+    if (n.length) n.position({ x: base.x + dx, y: base.y + dy });
+  });
+});
+
+cy.on('free', 'node', (e) => {
+  if (isDraggingGroup && dragLeader && e.target.id() === dragLeader.id()) {
+    isDraggingGroup = false;
+    dragLeader      = null;
+    leaderStart     = null;
+    groupDragBase   = {};
+  }
+});
+
+// Center root in viewport on initial load
+cy.one('layoutstop', () => {
+  centerOnRoot();
+});
+
+// ─── LEGEND FILTER ────────────────────────────────────────────────────────────
+(function() {
+  let activeFilter = null;
+
+  function getSelector(filter) {
+    if (filter === 'root')       return n => n.data('type') === 'root';
+    if (filter === 'project')    return n => n.data('type') === 'project';
+    if (filter === 'group')      return n => n.data('type') === 'group';
+    if (filter === 'alfred')     return n => n.data('type') === 'skill' && n.data('project') === 'alfred';
+    if (filter === 'hvac')       return n => n.data('type') === 'skill' && n.data('project') === 'hvac';
+    if (filter === 'medical')    return n => n.data('type') === 'skill' && (n.data('project') === 'medical' || n.data('project') === 'ideas');
+    if (filter === 'superpowers')return n => n.data('type') === 'skill' && n.data('project') === 'superpowers';
+    if (filter === 'plugins')    return n => n.data('type') === 'skill' && n.data('project') === 'plugins';
+    if (filter === 'review')     return n => !!n.data('needsReview');
+    return () => false;
+  }
+
+  document.querySelectorAll('.legend-row[data-filter]').forEach(row => {
+    row.addEventListener('click', () => {
+      const filter = row.dataset.filter;
+
+      // Toggle off if already active
+      if (activeFilter === filter) {
+        activeFilter = null;
+        document.querySelectorAll('.legend-row').forEach(r => r.classList.remove('legend-active'));
+        cy.elements().removeClass('highlighted dimmed');
+        return;
+      }
+
+      // Set new active filter
+      activeFilter = filter;
+      document.querySelectorAll('.legend-row').forEach(r => r.classList.remove('legend-active'));
+      row.classList.add('legend-active');
+
+      const match = getSelector(filter);
+      cy.elements().addClass('dimmed');
+      cy.nodes().forEach(n => {
+        if (match(n)) {
+          n.removeClass('dimmed').addClass('highlighted');
+          // Also un-dim connected edges
+          n.connectedEdges().removeClass('dimmed');
+        }
+      });
+    });
+  });
+})();
+
+// ─── NODE FILE MODAL ──────────────────────────────────────────────────────────
+const HOME = '/Users/sergevilleneuve/Documents';
+
+const PROJECT_SKILL_BASE = {
+  alfred:     `${HOME}/Projects/Alfred/.claude/skills`,
+  hvac:       `${HOME}/Projects/HVAC_ideas/.claude/skills`,
+  medical:    `${HOME}/Projects/medical-diagnostic/skills`,
+  superpowers:`${HOME}/Projects/superpowers/skills`,
+  plugins:    `/Users/sergevilleneuve/.claude/plugins/marketplaces/claude-plugins-official/plugins`,
+  ideas:      `${HOME}/Projects/.ideas`,
+};
+
+const PROJECT_ROOT = {
+  alfred:     `${HOME}/Projects/Alfred`,
+  hvac:       `${HOME}/Projects/HVAC_ideas`,
+  medical:    `${HOME}/Projects/medical-diagnostic`,
+  'idea-web': `${HOME}/Projects/idea-capture-web`,
+  superpowers:`${HOME}/Projects/superpowers`,
+  plugins:    `/Users/sergevilleneuve/.claude/plugins/marketplaces/claude-plugins-official`,
+  ideas:      `${HOME}/Projects/.ideas`,
+};
+
+function getFilePath(d) {
+  if (d.type === 'skill') {
+    const base = PROJECT_SKILL_BASE[d.project];
+    if (!base) return null;
+    if (d.project === 'plugins') return `${base}/${d.pkg}/skills/${d.label}/SKILL.md`;
+    if (d.project === 'ideas') return `${HOME}/Projects/.ideas/SKILL.md`;
+    if (d.skillDir) return `${d.skillDir}/${d.label}/SKILL.md`;
+    return `${base}/${d.label}/SKILL.md`;
+  }
+  if (d.type === 'project') {
+    const root = PROJECT_ROOT[d.project || d.id.replace('p-','')];
+    return root ? `${root}/CLAUDE.md` : null;
+  }
+  if (d.type === 'root') return `${HOME}/CLAUDE.md`;
+  return null;
+}
+
+const overlay    = document.getElementById('node-modal-overlay');
+const modalType    = document.getElementById('node-modal-type');
+const modalTitle   = document.getElementById('node-modal-title');
+const modalDesc    = document.getElementById('node-modal-desc');
+const modalPath    = document.getElementById('node-modal-path');
+const modalContent = document.getElementById('node-modal-content');
+let   currentFilePath = null;
+
+// Minimal markdown → HTML renderer
+function renderMarkdown(md) {
+  let html = md
+    // Escape HTML
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    // Fenced code blocks
+    .replace(/```[\w]*\n([\s\S]*?)```/g, (_, c) => `<pre><code>${c.trimEnd()}</code></pre>`)
+    // Headers
+    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+    .replace(/^## (.+)$/gm,  '<h2>$1</h2>')
+    .replace(/^# (.+)$/gm,   '<h1>$1</h1>')
+    // HR
+    .replace(/^---+$/gm, '<hr>')
+    // Bold / italic
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g,     '<em>$1</em>')
+    // Inline code
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    // Unordered list items
+    .replace(/^[-*] (.+)$/gm, '<li>$1</li>')
+    // Wrap consecutive <li> in <ul>
+    .replace(/(<li>[\s\S]*?<\/li>)(\n(?!<li>)|$)/g, (m) => `<ul>${m}</ul>`)
+    // Paragraphs (blank-line separated, not already a block tag)
+    .replace(/(?:^|\n)(?!<[hupol]|<pre|<hr)([^\n<][^\n]*)/g, '<p>$1</p>');
+  return html;
+}
+
+async function fetchFileContent(path) {
+  // Try the companion server first (http://localhost:8765/file?path=...)
+  try {
+    const res = await fetch(`/file?path=${encodeURIComponent(path)}`, { signal: AbortSignal.timeout(1500) });
+    if (res.ok) return await res.text();
+  } catch (_) {}
+  return null;
+}
+
+async function openNodeModal(nodeData) {
+  currentFilePath = getFilePath(nodeData);
+  modalType.textContent  = nodeData.type;
+  modalType.className    = nodeData.type;
+  modalTitle.textContent = nodeData.label;
+  modalDesc.textContent  = nodeData.desc || '';
+  modalContent.style.display = 'none';
+  modalContent.className = '';
+
+  if (currentFilePath) {
+    modalPath.textContent = currentFilePath;
+    modalPath.classList.remove('no-path');
+
+  } else {
+    modalPath.textContent = 'No file associated';
+    modalPath.classList.add('no-path');
+
+  }
+  overlay.classList.add('open');
+
+  // Fetch content if we have a path
+  if (currentFilePath) {
+    modalContent.style.display = 'block';
+    modalContent.className = 'loading';
+    modalContent.textContent = 'Loading…';
+    const text = await fetchFileContent(currentFilePath);
+    if (text !== null) {
+      modalContent.className = '';
+      modalContent.innerHTML = renderMarkdown(text);
+    } else {
+      modalContent.className = 'error';
+      modalContent.textContent = location.protocol === 'file:'
+        ? 'Cannot read files from file:// page.\nRun: python3 skills-mindmap-server.py — then reload.'
+        : 'Cannot fetch file — server may be stopped or the path is outside allowed roots.\nRestart: python3 skills-mindmap-server.py';
+    }
+  }
+}
+
+function closeNodeModal() {
+  overlay.classList.remove('open');
+  modalContent.style.display = 'none';
+}
+
+document.getElementById('node-modal-cancel').addEventListener('click', closeNodeModal);
+document.getElementById('node-modal-close').addEventListener('click', closeNodeModal);
+overlay.addEventListener('click', e => { if (e.target === overlay) closeNodeModal(); });
+
+// Double-click/tap on any node opens the modal
+cy.on('dbltap', 'node', evt => { openNodeModal(evt.target.data()); });
+</script>
+</body>
+</html>

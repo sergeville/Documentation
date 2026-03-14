@@ -207,5 +207,5 @@ tools: Read, Grep, Bash
 
 ---
 
-*Last updated: 2026-03-11 | Maintained by: Claude (auto-generated)*
+*Last updated: 2026-03-14 | Maintained by: Claude (auto-generated)*
 *To refresh: `find ~/Documents -iname "SKILL.md" | grep -v worktrees | wc -l`*

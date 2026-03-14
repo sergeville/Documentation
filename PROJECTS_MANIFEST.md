@@ -1,7 +1,7 @@
 # Projects Manifest
 <!-- AUTO-MAINTAINED by Claude. Update when: project created, status changes, port changes, stack changes. -->
 <!-- Location: ~/Documents/Documentation/PROJECTS_MANIFEST.md -->
-<!-- Last updated: 2026-03-13 -->
+<!-- Last updated: 2026-03-14 -->
 
 ## Legend
 🚀 Production | 🔄 Active Dev | 🧪 Prototype | 🛠️ Tool | 📦 Stale/Archive
@@ -45,7 +45,7 @@
 | archon-telemetry | 🚀 | Node/React | ✅ | 2026-02-28 | Live ops dashboard for Archon :3008 |
 | voice-boardroom | 🚀 | Python/Flask | ✅ | 2026-03-12 | Multi-agent voice boardroom :3007 + VWA (voice→HVAC) at :3007/vwa |
 | ai-assistant | 🚀 | Docker | ❌ | 2026-02-24 | alfred-agent + neural-interface |
-| Alfred | 🔄 | Python | ✅ | 2026-03-12 | Alfred agent service (source) |
+| Alfred | 🔄 | Python | ✅ | 2026-03-14 | Alfred agent service (source) — active at `~/Documents/Projects/Alfred/` |
 | HVAC_ideas | 🚀 | Python | ✅ | 2026-03-12 | Multi-agent HVAC assistant |
 | LLM_streamer | 🚀 | Python/Docker | ✅ | 2026-02-22 | LLM streaming gateway |
 | axiom | 🔄 | Python | ❌ | 2026-02-23 | iMessage watcher + Claude Vision — blocked on Apple ID |

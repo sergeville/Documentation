@@ -1,7 +1,7 @@
 # Projects Manifest
 <!-- AUTO-MAINTAINED by Claude. Update when: project created, status changes, port changes, stack changes. -->
 <!-- Location: ~/Documents/Documentation/PROJECTS_MANIFEST.md -->
-<!-- Last updated: 2026-03-12 -->
+<!-- Last updated: 2026-03-13 -->
 
 ## Legend
 🚀 Production | 🔄 Active Dev | 🧪 Prototype | 🛠️ Tool | 📦 Stale/Archive
@@ -39,7 +39,7 @@
 
 | Project | Status | Stack | Git | Last Active | Notes |
 |---|---|---|---|---|---|
-| idea-capture-web | 🚀 | Node/React | ✅ | 2026-03-12 | Idea studio :3001 + Capture API :3002 + AI Venture Studio |
+| idea-capture-web | 🚀 | Node/React | ✅ | 2026-03-13 | Idea studio :3001 + Capture API :3002 + AI Venture Studio (Epics 1–11 + AVS 1.1–3.2 done; Epic 6 hardening in progress) |
 | ai-dev-dashboard | 🚀 | Python/Flask | ✅ | 2026-02-28 | Dev env dashboard :3004 |
 | Archon | 🚀 | Python/Docker | ✅ | 2026-03-12 | Task/context system |
 | archon-telemetry | 🚀 | Node/React | ✅ | 2026-02-28 | Live ops dashboard for Archon :3008 |
@@ -62,7 +62,7 @@
 | Project | Status | Stack | Git | Last Active | Notes |
 |---|---|---|---|---|---|
 | visual-inventory | 🚀 | Node/Docker | ✅ | 2026-03-12 | Inventory system + Axiom inbox :3003 |
-| bp-monitor | 🔄 | Node | ✅ | 2026-02-21 | Blood pressure monitor (OCR) |
+| bp-monitor | 🔄 | Node/React PWA | ✅ | 2026-03-12 | BP monitor PWA :3012 + Flask API :3013 (Epic 2.1 done) |
 | diplomat-dream-display | 🔄 | Node | ✅ | 2026-02-19 | Display dashboard |
 | carparts | 🧪 | Node (Next.js) | ✅ | 2026-02-22 | Interactive car parts diagram |
 | simcity-threejs-clone | 🧪 | Node (Three.js) | ✅ | 2026-02-18 | SimCity clone |

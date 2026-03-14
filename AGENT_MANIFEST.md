@@ -1,5 +1,5 @@
 # AGENT MANIFEST — System/
-*Auto-generated 2026-03-14 13:46 by docs-generators/gen-manifest.py*
+*Auto-generated 2026-03-14 13:52 by docs-generators/gen-manifest.py*
 *Do not edit manually — overwritten on every commit.*
 
 ## How to use

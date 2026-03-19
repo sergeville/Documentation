@@ -3,6 +3,9 @@ System/
 ~$*
 *.heic
 
+# mac-meta tool artifacts
+.mac-meta*
+
 # Media folders not tracked in git
 Personal/media/project-assets/
 Personal/media/ai-generated/

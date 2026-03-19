@@ -1,5 +1,5 @@
 # AGENT MANIFEST — System/
-*Auto-generated 2026-03-14 13:52 by docs-generators/gen-manifest.py*
+*Auto-generated 2026-03-19 12:14 by docs-generators/gen-manifest.py*
 *Do not edit manually — overwritten on every commit.*
 
 ## How to use
@@ -87,4 +87,17 @@ Do not read. Safe to move to `~/Documents/Archive/` if noise is an issue.
 | `TERMINAL_RECOVERY_STATE.md` | Historical: 2026-01-21 SSD migration recovery |
 | `workflow_state.md` | Duplicate of CLAUDE_WORKFLOW.md |
 
-_Updated: 2026-03-14 — 25 active files, 26 archived, 0 uncategorized_
+---
+
+## ❓ Uncategorized — Add to docs-generators/gen-manifest.py
+
+| File |
+|---|
+| `PLAN_REMAINING_SHORTFALLS.md` |
+| `PLAN_RULES_AND_MEMORY_CONSOLIDATION.md` |
+| `PLAN_THREE_GAPS.md` |
+| `UI_DESIGNER_PROMPT.md` |
+| `bmad-cmd.md` |
+| `launch-agents.md` |
+
+_Updated: 2026-03-19 — 25 active files, 26 archived, 6 uncategorized_

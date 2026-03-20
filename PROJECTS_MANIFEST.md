@@ -1,7 +1,7 @@
 # Projects Manifest
 <!-- AUTO-MAINTAINED by Claude. Update when: project created, status changes, port changes, stack changes. -->
 <!-- Location: ~/Documents/Documentation/PROJECTS_MANIFEST.md -->
-<!-- Last updated: 2026-03-14 -->
+<!-- Last updated: 2026-03-20 -->
 
 ## Legend
 🚀 Production | 🔄 Active Dev | 🧪 Prototype | 🛠️ Tool | 📦 Stale/Archive
@@ -68,6 +68,7 @@
 | simcity-threejs-clone | 🧪 | Node (Three.js) | ✅ | 2026-02-18 | SimCity clone |
 | weatherAppDemo | 🧪 | Node (React) | ✅ | 2026-02-20 | Weather app demo |
 | claude-dashboard | 🚀 | Python/Flask | ✅ | 2026-03-07 | Claude Code cost dashboard :3011 |
+| workflow-panel | 🚀 | Node/React | ✅ | 2026-03-20 | BMAD workflow kanban board (Vite+Framer Motion) :3019 |
 
 ### Infrastructure & Tools
 

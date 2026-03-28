@@ -1,11 +1,42 @@
 System/
 .DS_Store
 ~$*
-*.heic
 
 # mac-meta tool artifacts
 .mac-meta*
 
-# Media folders not tracked in git
-Personal/media/project-assets/
-Personal/media/ai-generated/
+# Image and media files
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
+*.svg
+*.ico
+*.bmp
+*.tiff
+*.tif
+*.heic
+*.heif
+*.avif
+*.raw
+
+# Video and audio
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.mp3
+*.wav
+*.m4a
+*.m4v
+
+# Binary documents
+*.pdf
+*.pptx
+*.docx
+*.xlsx
+*.zip
+
+# Media folder (all contents)
+Personal/media/

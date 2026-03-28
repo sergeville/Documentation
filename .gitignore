@@ -5,38 +5,15 @@ System/
 # mac-meta tool artifacts
 .mac-meta*
 
-# Image and media files
-*.png
-*.jpg
-*.jpeg
-*.gif
-*.webp
-*.svg
-*.ico
-*.bmp
-*.tiff
-*.tif
-*.heic
-*.heif
-*.avif
-*.raw
+# Personal folder (private — CVs, photos, media)
+Personal/
 
-# Video and audio
-*.mp4
-*.mov
-*.avi
-*.mkv
-*.mp3
-*.wav
-*.m4a
-*.m4v
-
-# Binary documents
-*.pdf
+# Binary documents (not doc-linked)
 *.pptx
 *.docx
 *.xlsx
 *.zip
+*.doc
 
-# Personal folder (all contents — private)
-Personal/
+# Bulk media dumps (not doc assets)
+Personal/media/

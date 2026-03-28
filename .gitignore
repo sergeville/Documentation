@@ -38,5 +38,5 @@ System/
 *.xlsx
 *.zip
 
-# Media folder (all contents)
-Personal/media/
+# Personal folder (all contents — private)
+Personal/

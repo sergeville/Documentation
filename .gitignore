@@ -8,12 +8,52 @@ System/
 # Personal folder (private — CVs, photos, media)
 Personal/
 
-# Binary documents (not doc-linked)
+# Binary documents (not diff-able, repo bloat)
 *.pptx
 *.docx
 *.xlsx
 *.zip
 *.doc
+*.pdf
 
-# Bulk media dumps (not doc assets)
-Personal/media/
+# Block all images globally — only allow images inside assets/ or images/ folders
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
+*.bmp
+*.tiff
+*.tif
+*.heic
+*.heif
+*.avif
+*.svg
+*.ico
+
+# Re-allow images that live in doc asset folders
+!**/assets/*.png
+!**/assets/*.jpg
+!**/assets/*.jpeg
+!**/assets/*.gif
+!**/assets/*.webp
+!**/assets/*.svg
+!**/images/*.png
+!**/images/*.jpg
+!**/images/*.jpeg
+!**/images/*.gif
+!**/images/*.webp
+!**/images/*.svg
+!**/img/*.png
+!**/img/*.jpg
+!**/img/*.jpeg
+!**/img/*.gif
+!**/img/*.svg
+!**/figures/*.png
+!**/figures/*.jpg
+!**/figures/*.svg
+
+# Re-allow drawio/excalidraw diagrams anywhere (they're source files)
+!*.drawio
+!*.drawio.svg
+!*.excalidraw

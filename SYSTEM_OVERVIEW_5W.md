@@ -70,7 +70,7 @@ Build those three and the rest becomes a working system instead of a collection 
 | **LLM Streamer** | 8000 | AI event bus gateway — cross-agent context sharing (paused, security design needed) | Paused |
 | **Neural Interface** | 3005 | Proxy / interface layer | Active |
 | **HVAC Stack** | 3010 / 8010 / 1883 / 8880 | Full HVAC AI system: React frontend, Python backend, MQTT broker, Kokoro TTS | Active |
-| **Ollama** | 11434 | Local LLM serving (Mistral, LLaMA, etc.) | Active |
+| **Ollama** | 11434 | Local LLM serving (llama3.2 3B) — Homebrew native, Apple Silicon MLX. Fallback when OpenAI budget exhausted. | Active (Homebrew, NOT Docker — since 2026-04-03) |
 
 ### Active Dev Projects (On-Demand)
 
@@ -160,7 +160,7 @@ Build those three and the rest becomes a working system instead of a collection 
 8055  RLM service (reserved)
 8123  Home Assistant (Docker)
 8181  Archon API (Docker)
-11434 Ollama (Docker)
+11434 Ollama (Homebrew native — NOT Docker)
 ```
 
 ### Important Config Files

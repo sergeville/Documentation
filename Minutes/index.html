@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en" data-synapse-service="minutes">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Session Minutes — Synapse</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="http://localhost:3000/packages/design-system/synapse-nav.js" defer></script>
+<style>
+  :root {
+    --paper: #f5f0e4;
+    --paper-white: #faf8f2;
+    --grid-major: rgba(30,58,138,0.09);
+    --grid-minor: rgba(30,58,138,0.035);
+    --cobalt: #1e3a8a;
+    --cobalt-mid: #2563eb;
+    --cobalt-dim: rgba(30,58,138,0.06);
+    --cobalt-bdr: rgba(30,58,138,0.2);
+    --cobalt-bdr-hi: rgba(30,58,138,0.45);
+    --green: #15803d;
+    --amber: #b45309;
+    --red: #b91c1c;
+    --text: #0d1b2a;
+    --text-mid: #1e3a5f;
+    --muted: #6b7280;
+    --panel-bg: rgba(255,255,252,0.88);
+    --mono: 'IBM Plex Mono', 'Courier New', monospace;
+    --sans: 'IBM Plex Sans', -apple-system, sans-serif;
+    --touch-min: 44px;
+  }
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background-color: var(--paper);
+    background-image:
+      linear-gradient(var(--grid-major) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-major) 1px, transparent 1px),
+      linear-gradient(var(--grid-minor) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-minor) 1px, transparent 1px);
+    background-size: 60px 60px, 60px 60px, 12px 12px, 12px 12px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.5;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body.has-synapse-nav { padding-top: var(--nav-height, 36px); }
+
+  /* ── Header ──────────────────────────────────── */
+  header {
+    background: var(--panel-bg);
+    border-bottom: 1px solid var(--cobalt-bdr-hi);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  header h1 {
+    font-family: var(--sans);
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--cobalt);
+    letter-spacing: -0.5px;
+  }
+
+  header .subtitle {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .back-btn, .refresh-btn {
+    font-size: 11px;
+    color: var(--cobalt-mid);
+    text-decoration: none;
+    padding: 4px 10px;
+    border: 1px solid var(--cobalt-bdr);
+    background: var(--cobalt-dim);
+    cursor: pointer;
+    min-height: var(--touch-min);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .back-btn:hover, .refresh-btn:hover { border-color: var(--cobalt-bdr-hi); }
+  .refresh-btn { margin-left: auto; }
+  .refresh-btn.spinning { animation: spin 0.6s linear; }
+  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+  /* ── Stats bar ───────────────────────────────── */
+  .stats-bar {
+    display: flex;
+    gap: 20px;
+    padding: 6px 20px;
+    border-bottom: 1px solid var(--cobalt-bdr);
+    font-size: 9px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .stats-bar strong { color: var(--cobalt); font-weight: 600; }
+
+  /* ── Container ───────────────────────────────── */
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 12px 20px;
+  }
+
+  /* ── List view: Minute cards ─────────────────── */
+  .minute-card {
+    background: var(--panel-bg);
+    border: 1px solid var(--cobalt-bdr);
+    padding: 10px 14px;
+    margin-bottom: 6px;
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.15s;
+    min-height: var(--touch-min);
+    cursor: pointer;
+  }
+  .minute-card:hover { border-color: var(--cobalt-bdr-hi); }
+  .minute-card.active { border-color: var(--cobalt-mid); border-width: 2px; }
+
+  .minute-row {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 4px;
+  }
+
+  .minute-date {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--cobalt);
+    white-space: nowrap;
+  }
+
+  .minute-topic {
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .minute-agent {
+    font-size: 9px;
+    font-weight: 500;
+    color: var(--cobalt-mid);
+    background: var(--cobalt-dim);
+    padding: 1px 5px;
+    border: 1px solid var(--cobalt-bdr);
+    white-space: nowrap;
+  }
+
+  .minute-summary {
+    font-size: 10px;
+    color: var(--text-mid);
+    line-height: 1.5;
+  }
+
+  /* ── Detail view: Rendered markdown ──────────── */
+  #detail-view {
+    display: none;
+  }
+
+  #detail-view.visible {
+    display: block;
+  }
+
+  #list-view.hidden {
+    display: none;
+  }
+
+  .detail-meta {
+    background: var(--panel-bg);
+    border: 1px solid var(--cobalt-bdr);
+    padding: 12px 16px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .detail-content {
+    background: var(--panel-bg);
+    border: 1px solid var(--cobalt-bdr);
+    padding: 20px 24px;
+  }
+
+  /* Markdown rendered styles */
+  .detail-content h1 {
+    font-family: var(--sans);
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--cobalt);
+    margin: 0 0 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--cobalt-bdr);
+  }
+
+  .detail-content h2 {
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--cobalt);
+    margin: 20px 0 8px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--cobalt-bdr);
+  }
+
+  .detail-content h3 {
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text);
+    margin: 16px 0 6px;
+  }
+
+  .detail-content p {
+    margin: 8px 0;
+    line-height: 1.7;
+  }
+
+  .detail-content ul, .detail-content ol {
+    margin: 8px 0;
+    padding-left: 20px;
+  }
+
+  .detail-content li {
+    margin: 4px 0;
+    line-height: 1.6;
+  }
+  .detail-content ul ul {
+    margin: 2px 0;
+    padding-left: 16px;
+  }
+
+  .detail-content strong {
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .detail-content em {
+    color: var(--text-mid);
+  }
+
+  .detail-content code {
+    background: var(--cobalt-dim);
+    padding: 1px 4px;
+    font-size: 11px;
+    border: 1px solid var(--cobalt-bdr);
+  }
+
+  .detail-content pre {
+    background: var(--cobalt-dim);
+    border: 1px solid var(--cobalt-bdr);
+    padding: 10px 14px;
+    overflow-x: auto;
+    margin: 10px 0;
+    font-size: 11px;
+    line-height: 1.5;
+  }
+  .detail-content pre code {
+    background: none;
+    border: none;
+    padding: 0;
+  }
+
+  .detail-content blockquote {
+    border-left: 3px solid var(--cobalt-mid);
+    padding: 6px 14px;
+    margin: 10px 0;
+    color: var(--text-mid);
+    background: var(--cobalt-dim);
+  }
+
+  .detail-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+    font-size: 11px;
+  }
+
+  .detail-content th {
+    text-align: left;
+    font-weight: 600;
+    color: var(--cobalt);
+    padding: 6px 10px;
+    border-bottom: 2px solid var(--cobalt-bdr-hi);
+    font-size: 9px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .detail-content td {
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--cobalt-bdr);
+    vertical-align: top;
+  }
+
+  .detail-content hr {
+    border: none;
+    border-top: 1px solid var(--cobalt-bdr);
+    margin: 16px 0;
+  }
+
+  .detail-content a {
+    color: var(--cobalt-mid);
+    text-decoration: none;
+  }
+  .detail-content a:hover { text-decoration: underline; }
+
+  .loading {
+    text-align: center;
+    padding: 40px;
+    color: var(--muted);
+  }
+
+  /* ── Responsive ──────────────────────────────── */
+  @media (max-width: 480px) {
+    header { padding: 10px 12px; gap: 8px; }
+    header h1 { font-size: 15px; }
+    .stats-bar { padding: 6px 12px; gap: 10px; flex-wrap: wrap; }
+    .container { padding: 10px 12px; }
+    .minute-card { padding: 10px 12px; }
+    .detail-content { padding: 14px 12px; }
+    .detail-content h1 { font-size: 14px; }
+    .detail-content table { font-size: 10px; }
+    .detail-content th, .detail-content td { padding: 4px 6px; }
+  }
+
+  @media (min-width: 481px) and (max-width: 1024px) {
+    .container { padding: 14px 24px; }
+  }
+</style>
+</head>
+<body>
+
+<header id="page-header">
+  <h1>SESSION MINUTES</h1>
+  <span class="subtitle">Decisions, issues, and context from every Claude session</span>
+</header>
+
+<div class="stats-bar" id="stats"></div>
+
+<div class="container">
+  <!-- List view -->
+  <div id="list-view"></div>
+
+  <!-- Detail view (rendered markdown) -->
+  <div id="detail-view"></div>
+</div>
+
+<script>
+let minutes = [];
+
+// ── Minimal markdown renderer ──────────────────
+function renderMarkdown(md) {
+  let html = md;
+
+  // Pre blocks first (protect from other rules)
+  const pres = [];
+  html = html.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => {
+    const i = pres.length;
+    pres.push('<pre><code>' + esc(code.trimEnd()) + '</code></pre>');
+    return '\x00PRE' + i + '\x00';
+  });
+
+  // Tables
+  html = html.replace(/^(\|.+\|)\n(\|[\s:-]+\|)\n((?:\|.+\|\n?)+)/gm, (_, hdr, sep, body) => {
+    const heads = hdr.split('|').filter(c => c.trim()).map(c => '<th>' + c.trim() + '</th>').join('');
+    const rows = body.trim().split('\n').map(row => {
+      const cells = row.split('|').filter(c => c.trim()).map(c => '<td>' + inline(c.trim()) + '</td>').join('');
+      return '<tr>' + cells + '</tr>';
+    }).join('');
+    return '<table><thead><tr>' + heads + '</tr></thead><tbody>' + rows + '</tbody></table>';
+  });
+
+  // Headers
+  html = html.replace(/^#### (.+)$/gm, '<h4>$1</h4>');
+  html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+  html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+  html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+
+  // HR
+  html = html.replace(/^---+$/gm, '<hr>');
+
+  // Blockquotes
+  html = html.replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>');
+
+  // Unordered lists (supports nested with 2-space indent)
+  html = html.replace(/^(?:[ ]*- .+\n?)+/gm, match => {
+    const lines = match.trim().split('\n');
+    let result = '';
+    let depth = 0;
+    lines.forEach(l => {
+      const indent = l.match(/^( *)/)[1].length;
+      const level = Math.floor(indent / 2);
+      const text = inline(l.replace(/^ *- /, ''));
+      while (depth < level) { result += '<ul>'; depth++; }
+      while (depth > level) { result += '</ul>'; depth--; }
+      result += '<li>' + text + '</li>';
+    });
+    while (depth > 0) { result += '</ul>'; depth--; }
+    return '<ul>' + result + '</ul>';
+  });
+
+  // Ordered lists
+  html = html.replace(/^(?:\d+\. (.+)\n?)+/gm, match => {
+    const items = match.trim().split('\n').map(l => '<li>' + inline(l.replace(/^\d+\. /, '')) + '</li>').join('');
+    return '<ol>' + items + '</ol>';
+  });
+
+  // Paragraphs (lines not already wrapped)
+  html = html.replace(/^(?!<[hupoltbr]|<\/?[hupoltbr]|\x00)(.+)$/gm, '<p>$1</p>');
+
+  // Inline formatting
+  html = inline(html);
+
+  // Restore pre blocks
+  pres.forEach((pre, i) => {
+    html = html.replace('\x00PRE' + i + '\x00', pre);
+  });
+
+  // Clean up empty paragraphs
+  html = html.replace(/<p>\s*<\/p>/g, '');
+
+  return html;
+}
+
+function inline(text) {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+}
+
+function esc(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── Views ──────────────────────────────────────
+const listView = document.getElementById('list-view');
+const detailView = document.getElementById('detail-view');
+const header = document.getElementById('page-header');
+const stats = document.getElementById('stats');
+
+async function loadMinutes() {
+  try {
+    const resp = await fetch('/api/minutes', { cache: 'no-store' });
+    if (!resp.ok) throw new Error('api ' + resp.status);
+    minutes = await resp.json();
+  } catch (e) {
+    console.error('Failed to load /api/minutes:', e);
+    minutes = [];
+  }
+  // Sort newest first (date desc, then time desc)
+  minutes.sort((a, b) => {
+    const d = b.date.localeCompare(a.date);
+    return d !== 0 ? d : (b.time || '').localeCompare(a.time || '');
+  });
+}
+
+function showList() {
+  listView.className = '';
+  detailView.className = '';
+  detailView.innerHTML = '';
+
+  header.innerHTML = `
+    <h1>SESSION MINUTES</h1>
+    <span class="subtitle">Decisions, issues, and context from every Claude session</span>
+    <button class="refresh-btn" onclick="location.reload()" title="Refresh page">\u21BB Refresh</button>
+  `;
+
+  const agents = [...new Set(minutes.map(m => m.agent))];
+  stats.innerHTML = `
+    <span><strong>${minutes.length}</strong> sessions</span>
+    <span><strong>${agents.length}</strong> agents</span>
+    <span>Latest: <strong>${minutes[0]?.date || '\u2014'}</strong></span>
+  `;
+  stats.style.display = '';
+
+  listView.innerHTML = minutes.map((m, i) => `
+    <div class="minute-card" onclick="showDetail(${i})" role="button" tabindex="0">
+      <div class="minute-row">
+        <span class="minute-date">${m.date}</span>
+        <span class="minute-topic">${m.topic}</span>
+        <span class="minute-agent">${m.agent}</span>
+      </div>
+      <div class="minute-summary">${m.summary}</div>
+    </div>
+  `).join('');
+}
+
+async function showDetail(index) {
+  const m = minutes[index];
+  listView.className = 'hidden';
+  detailView.className = 'visible';
+  stats.style.display = 'none';
+
+  header.innerHTML = `
+    <a class="back-btn" onclick="showList(); return false;" href="#">\u2190 Back</a>
+    <h1>${m.topic}</h1>
+    <span class="minute-agent">${m.agent}</span>
+    <button class="refresh-btn" onclick="showDetail(${index})" title="Reload this minute">\u21BB Refresh</button>
+  `;
+
+  detailView.innerHTML = '<div class="loading">Loading...</div>';
+
+  try {
+    const resp = await fetch(m.file);
+    if (!resp.ok) throw new Error('Not found');
+    const md = await resp.text();
+
+    detailView.innerHTML = `
+      <div class="detail-meta">
+        <span class="minute-date">${m.date} ${m.time}</span>
+        <span class="minute-agent">${m.agent}</span>
+      </div>
+      <div class="detail-content">${renderMarkdown(md)}</div>
+    `;
+  } catch (e) {
+    detailView.innerHTML = '<div class="loading">Failed to load minutes file.</div>';
+  }
+}
+
+// Handle back button
+window.addEventListener('popstate', showList);
+
+// Init
+loadMinutes().then(showList);
+</script>
+
+</body>
+</html>

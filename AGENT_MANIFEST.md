@@ -1,5 +1,5 @@
 # AGENT MANIFEST — System/
-*Auto-generated 2026-03-28 14:10 by docs-generators/gen-manifest.py*
+*Auto-generated 2026-04-06 17:55 by docs-generators/gen-manifest.py*
 *Do not edit manually — overwritten on every commit.*
 
 ## How to use
@@ -96,14 +96,16 @@ Do not read. Safe to move to `~/Documents/Archive/` if noise is an issue.
 | `AI_ORCHESTRATOR_ARCHITECTURE.md` |
 | `CLAUDE_TEAM_OPERATING_MODEL.md` |
 | `COBALT_BLUEPRINT_STANDARD.md` |
+| `INFRASTRUCTURE_STATE.md` |
 | `PLAN_ARCHON_FS_BRIDGE_STABILIZATION.md` |
 | `PLAN_REMAINING_SHORTFALLS.md` |
 | `PLAN_RULES_AND_MEMORY_CONSOLIDATION.md` |
 | `PLAN_THREE_GAPS.md` |
 | `README.md` |
+| `RESEARCH_YEACHAN_HEO_REPOS.md` |
 | `SYSTEM-MANIFEST.md` |
 | `UI_DESIGNER_PROMPT.md` |
 | `bmad-cmd.md` |
 | `launch-agents.md` |
 
-_Updated: 2026-03-28 — 25 active files, 26 archived, 12 uncategorized_
+_Updated: 2026-04-06 — 25 active files, 26 archived, 14 uncategorized_

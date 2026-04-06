@@ -29,7 +29,7 @@
 | Archon API | 8181 | 🚀 | Docker |
 | LLM Gateway | 8000 | 🚀 | Docker |
 | Home Assistant | 8123 | 🚀 | Docker |
-| Ollama | 11434 | 🚀 | Docker |
+| Ollama | 11434 | 🚀 | Homebrew native (NOT Docker, since 2026-04-03) |
 
 ---
 

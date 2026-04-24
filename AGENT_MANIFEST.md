@@ -1,5 +1,5 @@
 # AGENT MANIFEST — System/
-*Auto-generated 2026-04-06 17:55 by docs-generators/gen-manifest.py*
+*Auto-generated 2026-04-23 21:13 by docs-generators/gen-manifest.py*
 *Do not edit manually — overwritten on every commit.*
 
 ## How to use
@@ -93,19 +93,32 @@ Do not read. Safe to move to `~/Documents/Archive/` if noise is an issue.
 
 | File |
 |---|
+| `ACTIVATION_CHECKLIST.md` |
 | `AI_ORCHESTRATOR_ARCHITECTURE.md` |
 | `CLAUDE_TEAM_OPERATING_MODEL.md` |
 | `COBALT_BLUEPRINT_STANDARD.md` |
+| `E2E_TEST_SCENARIOS.md` |
+| `GATE_4_NETWORK_OUTAGE_INVESTIGATION.md` |
 | `INFRASTRUCTURE_STATE.md` |
+| `OPEN_ITEMS_REGISTER.md` |
+| `PATH_D_ACCEPTANCE_RUBRIC.md` |
 | `PLAN_ARCHON_FS_BRIDGE_STABILIZATION.md` |
+| `PLAN_COCKPIT_STRUCTURE_ALIGNMENT_AND_TRUTH_PASS.md` |
+| `PLAN_OPS_CENTER_VALIDATION.md` |
 | `PLAN_REMAINING_SHORTFALLS.md` |
 | `PLAN_RULES_AND_MEMORY_CONSOLIDATION.md` |
 | `PLAN_THREE_GAPS.md` |
 | `README.md` |
 | `RESEARCH_YEACHAN_HEO_REPOS.md` |
+| `ROLLBACK_PLAYBOOK.md` |
+| `SENTINEL_AUDIT_2026-04-08.md` |
+| `SENTINEL_AUDIT_2026-04-08_RECONCILIATION.md` |
+| `STORY_FILE_PROTOCOL.md` |
+| `SYNAPSE_INSTALLER_AUDIT_2026-04-10.md` |
 | `SYSTEM-MANIFEST.md` |
 | `UI_DESIGNER_PROMPT.md` |
+| `UNUSED_PLUMBING_SWEEP_2026-04-10.md` |
 | `bmad-cmd.md` |
 | `launch-agents.md` |
 
-_Updated: 2026-04-06 — 25 active files, 26 archived, 14 uncategorized_
+_Updated: 2026-04-23 — 25 active files, 26 archived, 27 uncategorized_
